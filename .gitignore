@@ -41,3 +41,5 @@ Thumbs.db
 *.sln.docstates
 *.vcxproj.filters
 *.vcxproj.user
+
+dll

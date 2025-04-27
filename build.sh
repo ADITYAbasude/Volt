@@ -29,17 +29,25 @@ fi
 echo "== Copying Qt DLLs =="
 # Copy required Qt DLLs to the executable directory
 QT_DIR="C:/Qt/6.9.0/mingw_64"
-TARGET_DIR="src"
+DLL_DIR="dll"  # Store DLLs in a central location
+TARGET_DIR="."  # Root of build directory where Volt.exe is
 
-# Copy essential Qt DLLs
-cp "$QT_DIR/bin/Qt6Core.dll" "$TARGET_DIR/"
-cp "$QT_DIR/bin/Qt6Gui.dll" "$TARGET_DIR/"
-cp "$QT_DIR/bin/Qt6Widgets.dll" "$TARGET_DIR/"
+# First, ensure we have the DLLs in our dll directory
+mkdir -p "../$DLL_DIR"
+cp -f "$QT_DIR/bin/Qt6Core.dll" "../$DLL_DIR/"
+cp -f "$QT_DIR/bin/Qt6Gui.dll" "../$DLL_DIR/"
+cp -f "$QT_DIR/bin/Qt6Widgets.dll" "../$DLL_DIR/"
+cp -f "$QT_DIR/plugins/platforms/qwindows.dll" "../$DLL_DIR/"
+
+# Then copy from our dll directory to the build directory
+echo "Copying DLLs to build directory..."
+cp -f "../$DLL_DIR/Qt6Core.dll" "$TARGET_DIR/"
+cp -f "../$DLL_DIR/Qt6Gui.dll" "$TARGET_DIR/"
+cp -f "../$DLL_DIR/Qt6Widgets.dll" "$TARGET_DIR/"
 
 # Create platforms directory and copy platform plugin
 mkdir -p "$TARGET_DIR/platforms"
-cp "$QT_DIR/plugins/platforms/qwindows.dll" "$TARGET_DIR/platforms/"
+cp -f "../$DLL_DIR/qwindows.dll" "$TARGET_DIR/platforms/"
 
 echo "== Running Volt =="
-cd src
 ./Volt.exe
