@@ -1,9 +1,21 @@
+set(SOURCES
+    main.cpp
+    ui/menubar/FileMenu.cpp
+    ui/MainWindow.cpp
+)
+
+set(HEADERS
+    ui/menubar/FileMenu.h
+    ui/MainWindow.h
+)
+
 # Resource files
 qt_add_resources(RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources/app.qrc)
 
 # Create executable
 add_executable(${PROJECT_NAME}
-    main.cpp
+    ${SOURCES}
+    ${HEADERS}
     ${RESOURCES}
 )
 
