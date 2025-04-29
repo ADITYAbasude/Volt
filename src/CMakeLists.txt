@@ -2,12 +2,14 @@ set(SOURCES
     main.cpp
     ui/menubar/FileMenu.cpp
     ui/MainWindow.cpp
-)
-
+    ui/statusbar/StatusBar.cpp
+    )
+    
 set(HEADERS
     ui/menubar/FileMenu.h
     ui/MainWindow.h
-)
+    ui/statusbar/StatusBar.h
+    )
 
 # Resource files
 qt_add_resources(RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources/app.qrc)
