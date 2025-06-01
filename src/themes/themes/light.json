@@ -1,0 +1,61 @@
+{
+    "colors": {
+        "editor.background": "#FFFFFF",
+        "editor.foreground": "#000000",
+        "editor.lineNumber.background": "#F8F8F8",
+        "editor.lineNumber.foreground": "#237893",
+        "editor.selectionBackground": "#ADD6FF",
+        "editor.currentLine": "#F3F3F3",
+        "editor.matchingBrace": "#D4D4D4",
+        
+        "statusBar.background": "#007ACC",
+        "statusBar.foreground": "#FFFFFF",
+        "statusBar.border": "#007ACC",
+        
+        "menu.background": "#F3F3F3",
+        "menu.foreground": "#616161",
+        "menu.selectionBackground": "#0060C0",
+        "menu.selectionForeground": "#FFFFFF",
+        "menu.border": "#CCCCCC",
+        
+        "syntax.comment": "#008000",
+        "syntax.string": "#A31515",
+        "syntax.number": "#098658",
+        "syntax.keyword": "#0000FF",
+        "syntax.class": "#267F99",
+        "syntax.function": "#795E26",
+        "syntax.variable": "#001080",
+        "syntax.operator": "#000000",
+        "syntax.type": "#267F99"
+    },
+    "fonts": {
+        "editor": {
+            "family": "Consolas",
+            "size": 10,
+            "weight": "normal"
+        },
+        "menu": {
+            "family": "Segoe UI",
+            "size": 9,
+            "weight": "normal"
+        },
+        "statusBar": {
+            "family": "Segoe UI",
+            "size": 9,
+            "weight": "normal"
+        }
+    },
+    "dimensions": {
+        "editor.tabWidth": 4,
+        "editor.margins": [5, 5, 5, 5],
+        "editor.lineHeight": 20,
+        "editor.letterSpacing": 0,
+        
+        "statusBar.height": 22,
+        "statusBar.padding": [8, 0, 8, 0],
+        
+        "menu.itemHeight": 24,
+        "menu.padding": [8, 4, 8, 4],
+        "menu.separatorHeight": 1
+    }
+}
