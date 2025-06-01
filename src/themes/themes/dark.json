@@ -1,0 +1,68 @@
+{
+    "colors": {
+        "editor.background": "#1e1e1e",
+        "editor.foreground": "#d4d4d4", 
+        "editor.lineNumber.background": "#1e1e1e", 
+        "editor.lineNumber.foreground": "#858585",
+        "editor.cursor": "#ffffff",
+        "editor.indent.guide": "#404040",
+        "editor.selectionBackground": "#264f78",
+        "editor.selectionForeground": "#ffffff",
+        "editor.currentLine": "#2a2d2e",
+        "editor.matchingBrace": "#ffd700",
+        
+        "statusBar.background": "#007acc",
+        "statusBar.foreground": "#ffffff",
+        "statusBar.border": "#007acc",
+        
+        "menu.background": "#252526",
+        "menu.foreground": "#cccccc",
+        "menu.selectionBackground": "#04395e",
+        "menu.selectionForeground": "#ffffff",
+        "menu.border": "#454545",
+        
+        "syntax.comment": "#6a9955",
+        "syntax.string": "#ce9178",
+        "syntax.number": "#b5cea8",
+        "syntax.keyword": "#569cd6",
+        "syntax.class": "#4ec9b0",
+        "syntax.function": "#dcdcaa",
+        "syntax.variable": "#9cdcfe",
+        "syntax.operator": "#d4d4d4",
+        "syntax.type": "#4ec9b0",
+        "syntax.preprocessor": "#569cd6",
+        "syntax.escape": "#d7ba7d",
+        "syntax.regex": "#d16969",
+        "syntax.identifier": "#9cdcfe"
+    },
+    "fonts": {
+        "editor": {
+            "family": "Consolas",
+            "size": 10,
+            "weight": "normal"
+        },
+        "menu": {
+            "family": "Segoe UI",
+            "size": 9,
+            "weight": "normal"
+        },
+        "statusBar": {
+            "family": "Segoe UI",
+            "size": 9,
+            "weight": "normal"
+        }
+    },
+    "dimensions": {
+        "editor.tabWidth": 4,
+        "editor.margins": [5, 5, 5, 5],
+        "editor.lineHeight": 20,
+        "editor.letterSpacing": 0,
+        
+        "statusBar.height": 22,
+        "statusBar.padding": [8, 0, 8, 0],
+        
+        "menu.itemHeight": 24,
+        "menu.padding": [8, 4, 8, 4],
+        "menu.separatorHeight": 1
+    }
+}

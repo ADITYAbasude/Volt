@@ -3,6 +3,7 @@
 #include <QMainWindow>
 #include "menubar/FileMenu.h"
 #include "statusbar/StatusBar.h"
+#include "../editor/CodeEditor.h"
 
 class MainWindow : public QMainWindow
 {
@@ -18,9 +19,11 @@ private:
     // Setup functions
     void setupMenuBar();
     void setupStatusBar();
-    
-    // UI elements
+    void setupEditor();
+    void applyTheme();
+      // UI elements
     StatusBar *statusBar;
     FileMenu *fileMenu;
+    CodeEditor *editor;
 };
 

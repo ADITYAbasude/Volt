@@ -18,6 +18,7 @@ set(CMAKE_PREFIX_PATH "C:/Qt/6.9.0/mingw_64")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-stack-protector")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-stack-protector")
 
+
 # Find Qt packages
 find_package(Qt6 REQUIRED COMPONENTS 
     Core

@@ -45,6 +45,9 @@ cp -f "../$DLL_DIR/Qt6Core.dll" "$TARGET_DIR/"
 cp -f "../$DLL_DIR/Qt6Gui.dll" "$TARGET_DIR/"
 cp -f "../$DLL_DIR/Qt6Widgets.dll" "$TARGET_DIR/"
 
+# Copy qscintilla DLLs from dll directory of project root to build directory
+cp -f "../$DLL_DIR/qscintilla2_qt6.dll" "$TARGET_DIR/"
+
 # Create platforms directory and copy platform plugin
 mkdir -p "$TARGET_DIR/platforms"
 cp -f "../$DLL_DIR/qwindows.dll" "$TARGET_DIR/platforms/"
