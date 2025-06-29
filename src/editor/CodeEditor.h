@@ -16,5 +16,5 @@ public slots:
     
 private:
     void setupEditor();
-    QsciLexerCPP *lexer;
+    QsciLexerCPP *lexer; // lexer is used for syntax highlighting
 };

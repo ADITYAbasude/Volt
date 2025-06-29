@@ -20,7 +20,7 @@ fi
 
 # Build the project
 echo "== Building Project =="
-cmake --build .
+cmake --build . --parallel 4 
 if [ $? -ne 0 ]; then
     echo "Build failed!"
     exit 1

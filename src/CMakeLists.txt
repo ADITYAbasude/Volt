@@ -6,6 +6,7 @@ set(SOURCES
     editor/CodeEditor.cpp
     themes/Theme.cpp
     styles/StyleManager.cpp
+    logging/VoltLogger.cpp
     )
     
 set(HEADERS
@@ -15,6 +16,7 @@ set(HEADERS
     editor/CodeEditor.h
     themes/Theme.h
     styles/StyleManager.h
+    logging/VoltLogger.h
     )
 
 # Resource files

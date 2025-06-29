@@ -17,6 +17,7 @@ public slots:
     void updateLanguage(const QString &language);
     void updateEncoding(const QString &encoding);
     void updateLineEnding(const QString &lineEnding);
+    void applyTheme();  // Apply theme from JSON
 
 private:
     QLabel *cursorPositionLabel;
@@ -25,6 +26,5 @@ private:
     QLabel *lineEndingLabel;
 
     void setupLabels();
-    void setupStyle();
 
 };

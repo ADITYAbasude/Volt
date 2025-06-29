@@ -48,51 +48,82 @@ void CodeEditor::setupEditor()
 void CodeEditor::applyTheme() {
     Theme& theme = Theme::instance();
     
-    // === DEFINE COLORS DIRECTLY (FALLBACK APPROACH) ===
-    QColor bg("#1e1e1e");           // Dark background
-    QColor fg("#d4d4d4");           // Light foreground
-    QColor marginBg("#1e1e1e");     // Margin background
-    QColor marginFg("#858585");     // Line numbers
-    QColor selectionBg("#264f78");  // Selection background
-    QColor currentLineBg("#2a2d2e"); // Current line
-    QColor caretColor("#ffffff");   // Cursor
-    QColor matchBrace("#ffd700");   // Brace matching
-    QColor indentGuide("#404040");  // Indent guides
+    // Get colors from theme (with sensible fallbacks only if JSON completely fails)
+    QColor bg = theme.getColor("editor.background");
+    if (!bg.isValid()) {
+        bg = QColor("#1e1e1e");
+        qDebug() << "Using fallback background color";
+    }
     
-    // Syntax colors
-    QColor commentColor("#6a9955");    // Green comments
-    QColor stringColor("#ce9178");     // Orange strings
-    QColor numberColor("#b5cea8");     // Light green numbers
-    QColor keywordColor("#569cd6");    // Blue keywords
-    QColor classColor("#4ec9b0");      // Teal classes/types
-    QColor variableColor("#9cdcfe");   // Light blue variables
-    QColor operatorColor("#d4d4d4");   // Default operators
-    QColor preprocessorColor("#569cd6"); // Blue preprocessor
+    QColor fg = theme.getColor("editor.foreground");
+    if (!fg.isValid()) {
+        fg = QColor("#d4d4d4");
+        qDebug() << "Using fallback foreground color";
+    }
     
-    // Try to get colors from theme, use fallbacks if not available
-    bg = theme.getColor("editor.background", bg);
-    fg = theme.getColor("editor.foreground", fg);
-    marginBg = theme.getColor("editor.lineNumber.background", marginBg);
-    marginFg = theme.getColor("editor.lineNumber.foreground", marginFg);
-    selectionBg = theme.getColor("editor.selectionBackground", selectionBg);
-    currentLineBg = theme.getColor("editor.currentLine", currentLineBg);
-    caretColor = theme.getColor("editor.cursor", caretColor);
-    matchBrace = theme.getColor("editor.matchingBrace", matchBrace);
-    indentGuide = theme.getColor("editor.indent.guide", indentGuide);
+    QColor marginBg = theme.getColor("editor.lineNumber.background");
+    if (!marginBg.isValid()) marginBg = bg;
     
-    commentColor = theme.getColor("syntax.comment", commentColor);
-    stringColor = theme.getColor("syntax.string", stringColor);
-    numberColor = theme.getColor("syntax.number", numberColor);
-    keywordColor = theme.getColor("syntax.keyword", keywordColor);
-    classColor = theme.getColor("syntax.class", classColor);
-    variableColor = theme.getColor("syntax.variable", variableColor);
-    operatorColor = theme.getColor("syntax.operator", operatorColor);
-    preprocessorColor = theme.getColor("syntax.preprocessor", preprocessorColor);
+    QColor marginFg = theme.getColor("editor.lineNumber.foreground");
+    if (!marginFg.isValid()) marginFg = QColor("#858585");
     
+    QColor selectionBg = theme.getColor("editor.selectionBackground");
+    if (!selectionBg.isValid()) selectionBg = QColor("#264f78");
+    
+    QColor currentLineBg = theme.getColor("editor.currentLine");
+    if (!currentLineBg.isValid()) currentLineBg = QColor("#2a2d2e");
+    
+    QColor caretColor = theme.getColor("editor.cursor");
+    if (!caretColor.isValid()) caretColor = QColor("#f80303ff");
+    
+    QColor matchBrace = theme.getColor("editor.matchingBrace");
+    if (!matchBrace.isValid()) matchBrace = QColor("#ffd700");
+    
+    QColor indentGuide = theme.getColor("editor.indent.guide");
+    if (!indentGuide.isValid()) indentGuide = QColor("#404040");
+    
+    // Syntax colors from theme
+    QColor commentColor = theme.getColor("syntax.comment");
+    if (!commentColor.isValid()) commentColor = QColor("#6a9955");
+    
+    QColor stringColor = theme.getColor("syntax.string");
+    if (!stringColor.isValid()) stringColor = QColor("#ce9178");
+    
+    QColor numberColor = theme.getColor("syntax.number");
+    if (!numberColor.isValid()) numberColor = QColor("#b5cea8");
+    
+    QColor keywordColor = theme.getColor("syntax.keyword");
+    if (!keywordColor.isValid()) keywordColor = QColor("#569cd6");
+    
+    QColor classColor = theme.getColor("syntax.class");
+    if (!classColor.isValid()) classColor = QColor("#4ec9b0");
+    
+    QColor variableColor = theme.getColor("syntax.variable");
+    if (!variableColor.isValid()) variableColor = QColor("#9cdcfe");
+    
+    QColor operatorColor = theme.getColor("syntax.operator");
+    if (!operatorColor.isValid()) operatorColor = QColor("#d4d4d4");
+    
+    QColor preprocessorColor = theme.getColor("syntax.preprocessor");
+    if (!preprocessorColor.isValid()) preprocessorColor = QColor("#569cd6");
+    
+    // Get font from theme
     QFont editorFont = theme.getFont("editor");
     if (editorFont.family().isEmpty()) {
         editorFont = QFont("Consolas", 10);
+        qDebug() << "Using fallback font: Consolas 10pt";
+    } else {
+        qDebug() << "Using theme font:" << editorFont.family() << editorFont.pointSize() << "pt";
     }
+    
+    // Debug: Show which colors are being used
+    qDebug() << "=== THEME COLORS APPLIED ===";
+    qDebug() << "Background:" << bg.name() << "(valid:" << bg.isValid() << ")";
+    qDebug() << "Foreground:" << fg.name() << "(valid:" << fg.isValid() << ")";
+    qDebug() << "Comment:" << commentColor.name() << "(valid:" << commentColor.isValid() << ")";
+    qDebug() << "String:" << stringColor.name() << "(valid:" << stringColor.isValid() << ")";
+    qDebug() << "Keyword:" << keywordColor.name() << "(valid:" << keywordColor.isValid() << ")";
+    qDebug() << "Variable:" << variableColor.name() << "(valid:" << variableColor.isValid() << ")";
     
     // === STEP 1: CLEAR ALL EXISTING STYLES ===
     SendScintilla(SCI_CLEARDOCUMENTSTYLE);
@@ -213,7 +244,8 @@ void CodeEditor::applyTheme() {
     
     // Escape sequences
     lexer->setColor(QColor("#d7ba7d"), QsciLexerCPP::EscapeSequence);
-      // === STEP 12: APPLY LEXER ===
+    
+    // === STEP 12: APPLY LEXER ===
     setLexer(lexer);
     
     // === STEP 13: FORCE COMPLETE REFRESH ===
@@ -221,13 +253,11 @@ void CodeEditor::applyTheme() {
     update();
     viewport()->update();
     repaint();
+    
+    qDebug() << "=== THEME APPLICATION COMPLETED ===";
 }
 
 void CodeEditor::refreshTheme() {
-    // Force complete theme reapplication
-    if (lexer) {
-        delete lexer;
-        lexer = nullptr;
-    }
+    qDebug() << "CodeEditor refreshTheme() called";
     applyTheme();
 }

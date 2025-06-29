@@ -4,7 +4,7 @@
         "editor.foreground": "#d4d4d4", 
         "editor.lineNumber.background": "#1e1e1e", 
         "editor.lineNumber.foreground": "#858585",
-        "editor.cursor": "#ffffff",
+        "editor.cursor": "#fff",
         "editor.indent.guide": "#404040",
         "editor.selectionBackground": "#264f78",
         "editor.selectionForeground": "#ffffff",
@@ -54,12 +54,12 @@
     },
     "dimensions": {
         "editor.tabWidth": 4,
-        "editor.margins": [5, 5, 5, 5],
+        "editor.margins": [0, 0, 0, 0],
         "editor.lineHeight": 20,
         "editor.letterSpacing": 0,
         
         "statusBar.height": 22,
-        "statusBar.padding": [8, 0, 8, 0],
+        "statusBar.padding": [4, 0, 4, 0],
         
         "menu.itemHeight": 24,
         "menu.padding": [8, 4, 8, 4],

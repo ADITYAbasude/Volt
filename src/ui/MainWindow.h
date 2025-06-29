@@ -15,13 +15,17 @@ public:
     // Destructor
     ~MainWindow() = default;
 
+private slots:
+    void onThemeChanged();
+
 private:
     // Setup functions
     void setupMenuBar();
     void setupStatusBar();
     void setupEditor();
     void applyTheme();
-      // UI elements
+    
+    // UI elements
     StatusBar *statusBar;
     FileMenu *fileMenu;
     CodeEditor *editor;

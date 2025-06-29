@@ -7,6 +7,8 @@
 #include <QVariant>
 #include <memory>
 #include <unordered_map>
+#include <QMargins>
+#include <QSize>
 
 class Theme : public QObject {
     Q_OBJECT
@@ -22,6 +24,12 @@ public:
     QColor getColor(const QString& key, const QColor& fallback) const;
     QFont getFont(const QString& key) const;
     QVariant getDimension(const QString& key) const;
+    
+    // Dimension helper methods
+    int getDimensionInt(const QString& key, int fallback = 0) const;
+    QMargins getDimensionMargins(const QString& key, const QMargins& fallback = QMargins()) const;
+    QSize getDimensionSize(const QString& key, const QSize& fallback = QSize()) const;
+    QMargins getDimensionMarginsFromArray(const QString& key, const QMargins& fallback = QMargins()) const;
 
 signals:
     void themeChanged();
