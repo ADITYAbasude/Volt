@@ -52,5 +52,10 @@ cp -f "../$DLL_DIR/qscintilla2_qt6.dll" "$TARGET_DIR/"
 mkdir -p "$TARGET_DIR/platforms"
 cp -f "../$DLL_DIR/qwindows.dll" "$TARGET_DIR/platforms/"
 
+# Copy install_context_menu.reg, install.bat, and uninstall.bat
+cp -f "../install_context_menu.reg" "$TARGET_DIR/"
+cp -f "../install.bat" "$TARGET_DIR/"
+cp -f "../uninstall.bat" "$TARGET_DIR/" 
+
 echo "== Running Volt =="
 ./Volt.exe

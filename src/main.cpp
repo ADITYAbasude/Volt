@@ -1,5 +1,7 @@
 #include <QApplication>
 #include <QDir>
+#include <QFileInfo>
+#include <QCommandLineParser>
 #include "ui/MainWindow.h"
 #include "themes/Theme.h"
 #include "logging/VoltLogger.h"
@@ -13,6 +15,15 @@ int main(int argc, char *argv[])
     // Set application metadata
     QApplication::setApplicationName("Volt");
     QApplication::setApplicationDisplayName("Volt Editor");
+    QApplication::setApplicationVersion("1.0.0");
+
+    // Parse command line arguments
+    QCommandLineParser parser;
+    parser.setApplicationDescription("Volt Editor - A modern text editor");
+    parser.addHelpOption();
+    parser.addVersionOption();
+    parser.addPositionalArgument("file", "File or folder to open", "[file/folder]");
+    parser.process(app);
 
     // Initialize the centralized logging system
     VoltLogger::instance().initialize("logs/volt.log", VoltLogger::DEBUG, true, true);
@@ -31,6 +42,14 @@ int main(int argc, char *argv[])
     VOLT_DEBUG_F("Working directory: %1", QDir::currentPath());
     VOLT_DEBUG_F("Application directory: %1", app.applicationDirPath());
 
+    // Check for file/folder argument from context menu
+    const QStringList positionalArgs = parser.positionalArguments();
+    QString fileToOpen;
+    if (!positionalArgs.isEmpty()) {
+        fileToOpen = positionalArgs.first();
+        VOLT_INFO_F("File/folder to open from context menu: %1", fileToOpen);
+    }
+
     // Load the dark theme
     VOLT_THEME("Loading dark theme...");
     Theme::instance().loadTheme("dark");
@@ -39,6 +58,21 @@ int main(int argc, char *argv[])
     // Create main window
     VOLT_UI("Creating main window...");
     MainWindow window;
+    
+    // Open the file or folder if specified from context menu
+    if (!fileToOpen.isEmpty()) {
+        QFileInfo fileInfo(fileToOpen);
+        if (fileInfo.isFile()) {
+            window.openFile(fileToOpen);
+            VOLT_INFO_F("Opening file from context menu: %1", fileToOpen);
+        } else if (fileInfo.isDir()) {
+            window.openFolder(fileToOpen);
+            VOLT_INFO_F("Opening folder from context menu: %1", fileToOpen);
+        } else {
+            VOLT_WARN_F("Invalid file/folder path from context menu: %1", fileToOpen);
+        }
+    }
+    
     window.show();
     VOLT_UI("Main window created and shown successfully");
 

@@ -1,0 +1,27 @@
+Windows Registry Editor Version 5.00
+
+; Add "Open with Volt Editor" to file context menu
+[HKEY_CLASSES_ROOT\*\shell\OpenWithVolt]
+@="Open with Volt Editor"
+"Icon"="C:\\Program Files\\Volt Editor\\Volt.exe,0"
+
+[HKEY_CLASSES_ROOT\*\shell\OpenWithVolt\command]
+@="\"C:\\Program Files\\Volt Editor\\Volt.exe\" \"%1\""
+
+; Add "Open folder with Volt Editor" to folder context menu
+[HKEY_CLASSES_ROOT\Directory\shell\OpenWithVolt]
+@="Open folder with Volt Editor"
+"Icon"="C:\\personal\\Volt\\build\\Volt.exe,0"
+
+[HKEY_CLASSES_ROOT\Directory\shell\OpenWithVolt\command]
+@="\"C:\\Program Files\\Volt Editor\\Volt.exe\" \"%1\""
+
+; Add "Open with Volt Editor" to empty folder background
+[HKEY_CLASSES_ROOT\Directory\Background\shell\OpenWithVolt]
+@="Open with Volt Editor"
+"Icon"="C:\\Program Files\\Volt Editor\\Volt.exe,0"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\OpenWithVolt\command]
+@="\"C:\\Program Files\\Volt Editor\\Volt.exe\" \"%V\""
+
+

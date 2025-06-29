@@ -2,5 +2,7 @@
 <RCC>
     <qresource prefix="/">
         <file>icons/app.ico</file>
+        <file>icons/new_file.ico</file>
+        <file>icons/collapse_all.ico</file>
     </qresource>
 </RCC>

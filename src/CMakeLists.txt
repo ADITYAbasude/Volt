@@ -3,6 +3,7 @@ set(SOURCES
     ui/menubar/FileMenu.cpp
     ui/MainWindow.cpp
     ui/statusbar/StatusBar.cpp
+    ui/explorer/ProjectExplorer.cpp
     editor/CodeEditor.cpp
     themes/Theme.cpp
     styles/StyleManager.cpp
@@ -13,6 +14,7 @@ set(HEADERS
     ui/menubar/FileMenu.h
     ui/MainWindow.h
     ui/statusbar/StatusBar.h
+    ui/explorer/ProjectExplorer.h
     editor/CodeEditor.h
     themes/Theme.h
     styles/StyleManager.h

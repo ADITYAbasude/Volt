@@ -21,6 +21,13 @@
         "menu.selectionForeground": "#ffffff",
         "menu.border": "#454545",
         
+        "explorer.background": "#252526",
+        "explorer.foreground": "#cccccc",
+        "explorer.border": "#454545",
+        "explorer.selectionBackground": "#04395e",
+        "explorer.selectionForeground": "#ffffff",
+        "explorer.hoverBackground": "#2a2d2e",
+        
         "syntax.comment": "#6a9955",
         "syntax.string": "#ce9178",
         "syntax.number": "#b5cea8",
@@ -50,6 +57,11 @@
             "family": "Segoe UI",
             "size": 9,
             "weight": "normal"
+        },
+        "explorer": {
+            "family": "Segoe UI",
+            "size": 9,
+            "weight": "normal"
         }
     },
     "dimensions": {
@@ -58,8 +70,8 @@
         "editor.lineHeight": 20,
         "editor.letterSpacing": 0,
         
-        "statusBar.height": 22,
-        "statusBar.padding": [4, 0, 4, 0],
+        "statusBar.height": 18,
+        "statusBar.padding": [2, 0, 2, 0],
         
         "menu.itemHeight": 24,
         "menu.padding": [8, 4, 8, 4],

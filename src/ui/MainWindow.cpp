@@ -1,6 +1,11 @@
 #include "MainWindow.h"
 #include <QMenuBar>
 #include <QStatusBar>
+#include <QFileInfo>
+#include <QTextStream>
+#include <QMessageBox>
+#include <QAction>
+#include <QKeySequence>
 #include "../editor/CodeEditor.h"
 #include "../themes/Theme.h"
 #include "../logging/VoltLogger.h"
@@ -8,13 +13,14 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     setWindowTitle("Volt Editor");
-    resize(800, 600);
-    
+    resize(1200, 800);
+
     setupEditor();
     setupMenuBar();
     setupStatusBar();
+    setupProjectExplorer();
     applyTheme();
-    
+
     // Connect theme change signal to refresh all components
     connect(&Theme::instance(), &Theme::themeChanged, this, &MainWindow::onThemeChanged);
 }
@@ -24,14 +30,14 @@ void MainWindow::setupEditor()
     // Create and set the editor as central widget
     editor = new CodeEditor(this);
     setCentralWidget(editor);
-    
+
     // Add some sample text to verify the editor is working
     editor->setText("// Welcome to Volt Editor\n\n"
-                   "#include <iostream>\n\n"
-                   "int main() {\n"
-                   "    std::cout << \"Hello, World!\" << std::endl;\n"
-                   "    return 0;\n"
-                   "}\n");
+                    "#include <iostream>\n\n"
+                    "int main() {\n"
+                    "    std::cout << \"Hello, World!\" << std::endl;\n"
+                    "    return 0;\n"
+                    "}\n");
 }
 
 void MainWindow::setupMenuBar()
@@ -46,44 +52,56 @@ void MainWindow::setupStatusBar()
     setStatusBar(statusBar);
 }
 
+void MainWindow::setupProjectExplorer()
+{
+    projectExplorer = new ProjectExplorer(this);
+    addDockWidget(Qt::LeftDockWidgetArea, projectExplorer);
+
+    // Connect project explorer signals
+    connect(projectExplorer, &ProjectExplorer::fileDoubleClicked,
+            this, &MainWindow::openFile);
+}
+
 /*
-    * Applies the current theme to the main window components.
-    * This includes editor margins, tab width, menu styling, and status bar theme.
-    * THIS FUNCTION IS CALLED ON THEME CHANGE SIGNAL TOO
-*/
+ * Applies the current theme to the main window components.
+ * This includes editor margins, tab width, menu styling, and status bar theme.
+ * THIS FUNCTION IS CALLED ON THEME CHANGE SIGNAL TOO
+ */
 void MainWindow::applyTheme()
 {
-    Theme& theme = Theme::instance();
-    
+    Theme &theme = Theme::instance();
+
     qDebug() << "=== MAINWINDOW THEME APPLICATION ===";
-    
+
     // Apply editor margins from JSON
     QMargins editorMargins = theme.getDimensionMarginsFromArray("editor.margins", QMargins(5, 5, 5, 5));
-    if (editor) {
+    if (editor)
+    {
         editor->setContentsMargins(editorMargins);
-        
+
         // Apply tab width from JSON
         int tabWidth = theme.getDimensionInt("editor.tabWidth", 4);
         editor->setTabWidth(tabWidth);
-        
     }
-    
+
     // Apply menu styling from JSON
-    if (menuBar()) {
+    if (menuBar())
+    {
         QColor menuBg = theme.getColor("menu.background", QColor("#252526"));
         QColor menuFg = theme.getColor("menu.foreground", QColor("#CCCCCC"));
         QColor menuBorder = theme.getColor("menu.border", QColor("#454545"));
         QColor menuSelectionBg = theme.getColor("menu.selectionBackground", QColor("#04395E"));
         QColor menuSelectionFg = theme.getColor("menu.selectionForeground", QColor("#FFFFFF"));
-        
+
         int menuItemHeight = theme.getDimensionInt("menu.itemHeight", 24);
         QMargins menuPadding = theme.getDimensionMarginsFromArray("menu.padding", QMargins(8, 4, 8, 4));
-        
+
         QFont menuFont = theme.getFont("menu");
-        if (menuFont.family().isEmpty()) {
+        if (menuFont.family().isEmpty())
+        {
             menuFont = QFont("Segoe UI", 9);
         }
-        
+
         QString menuStyleSheet = QString(R"(
             QMenuBar {
                 background-color: %1;
@@ -122,29 +140,30 @@ void MainWindow::applyTheme()
                 color: %12;
             }
         )")
-        .arg(menuBg.name())                 // %1 - background
-        .arg(menuFg.name())                 // %2 - foreground  
-        .arg(menuBorder.name())             // %3 - border
-        .arg(menuPadding.top())             // %4 - padding top
-        .arg(menuPadding.right())           // %5 - padding right
-        .arg(menuPadding.bottom())          // %6 - padding bottom
-        .arg(menuFont.family())             // %7 - font family
-        .arg(menuFont.pointSize())          // %8 - font size
-        .arg(menuPadding.left())            // %9 - padding left
-        .arg(menuItemHeight)                // %10 - item height
-        .arg(menuSelectionBg.name())        // %11 - selection background
-        .arg(menuSelectionFg.name());       // %12 - selection foreground
-        
+                                     .arg(menuBg.name())           // %1 - background
+                                     .arg(menuFg.name())           // %2 - foreground
+                                     .arg(menuBorder.name())       // %3 - border
+                                     .arg(menuPadding.top())       // %4 - padding top
+                                     .arg(menuPadding.right())     // %5 - padding right
+                                     .arg(menuPadding.bottom())    // %6 - padding bottom
+                                     .arg(menuFont.family())       // %7 - font family
+                                     .arg(menuFont.pointSize())    // %8 - font size
+                                     .arg(menuPadding.left())      // %9 - padding left
+                                     .arg(menuItemHeight)          // %10 - item height
+                                     .arg(menuSelectionBg.name())  // %11 - selection background
+                                     .arg(menuSelectionFg.name()); // %12 - selection foreground
+
         menuBar()->setStyleSheet(menuStyleSheet);
-        
+
         qDebug() << "Applied menu theme - Background:" << menuBg.name() << "Height:" << menuItemHeight;
     }
-    
+
     // Apply theme to status bar
-    if (statusBar) {
+    if (statusBar)
+    {
         statusBar->applyTheme();
     }
-    
+
     qDebug() << "MainWindow theme application completed!";
 }
 
@@ -152,12 +171,49 @@ void MainWindow::onThemeChanged()
 {
     VOLT_THEME("Theme changed, refreshing MainWindow components");
     applyTheme();
-    
-    if (editor) {
+
+    if (editor)
+    {
         editor->refreshTheme();
     }
-    
-    if (statusBar) {
+
+    if (statusBar)
+    {
         statusBar->applyTheme();
+    }
+}
+
+void MainWindow::openFile(const QString &filePath)
+{
+    QFileInfo fileInfo(filePath);
+    if (!fileInfo.exists() || !fileInfo.isFile())
+    {
+        QMessageBox::warning(this, "Error", "File does not exist: " + filePath);
+        return;
+    }
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QMessageBox::warning(this, "Error", "Cannot open file: " + filePath);
+        return;
+    }
+
+    QTextStream in(&file);
+    QString content = in.readAll();
+    file.close();
+
+    editor->setText(content);
+    setWindowTitle(QString("Volt Editor - %1").arg(fileInfo.fileName()));
+
+    VoltLogger::instance().info("Opened file: %1", filePath);
+}
+
+void MainWindow::openFolder(const QString &folderPath)
+{
+    if (projectExplorer)
+    {
+        projectExplorer->setRootPath(folderPath);
+        VoltLogger::instance().info("Opened folder: %1", folderPath);
     }
 }
