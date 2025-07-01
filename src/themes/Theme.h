@@ -31,6 +31,13 @@ public:
     QSize getDimensionSize(const QString& key, const QSize& fallback = QSize()) const;
     QMargins getDimensionMarginsFromArray(const QString& key, const QMargins& fallback = QMargins()) const;
 
+    QString getStyle(const QString& key, QString fallback = QString()) const;
+    
+    // Style helper methods for accessing nested properties
+    bool getStyleBool(const QString& styleKey, const QString& property, bool fallback = false) const;
+    int getStyleInt(const QString& styleKey, const QString& property, int fallback = 0) const;
+    QString getStyleString(const QString& styleKey, const QString& property, const QString& fallback = QString()) const;
+
 signals:
     void themeChanged();
 
@@ -42,4 +49,5 @@ private:
     std::unordered_map<QString, QColor> m_colors;
     std::unordered_map<QString, QFont> m_fonts;
     std::unordered_map<QString, QVariant> m_dimensions;
+    std::unordered_map<QString, QString> m_styles; 
 };

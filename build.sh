@@ -3,15 +3,12 @@
 # Navigate to project root
 cd "$(dirname "$0")"
 
-# Remove old build
-rm -rf build
-
-# Create build directory
-mkdir build
+# Create build directory if it doesn't exist
+mkdir -p build
 cd build
 
-# Configure CMake
-echo "== Configuring CMake =="
+# Configure CMake (only if necessary)
+echo "== Configuring CMake (if needed) =="
 cmake -G "MinGW Makefiles" ..
 if [ $? -ne 0 ]; then
     echo "CMake configuration failed!"

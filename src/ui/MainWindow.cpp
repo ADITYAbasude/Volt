@@ -9,6 +9,7 @@
 #include "../editor/CodeEditor.h"
 #include "../themes/Theme.h"
 #include "../logging/VoltLogger.h"
+#include "../styles/StyleManager.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -30,6 +31,9 @@ void MainWindow::setupEditor()
     // Create and set the editor as central widget
     editor = new CodeEditor(this);
     setCentralWidget(editor);
+
+    // Apply scrollbar policy to the editor
+    StyleManager::setupWidgetScrollbars(editor);
 
     // Add some sample text to verify the editor is working
     editor->setText("// Welcome to Volt Editor\n\n"
@@ -71,7 +75,7 @@ void MainWindow::applyTheme()
 {
     Theme &theme = Theme::instance();
 
-    qDebug() << "=== MAINWINDOW THEME APPLICATION ===";
+    StyleManager::instance().applyGlobalScrollbarStyle();
 
     // Apply editor margins from JSON
     QMargins editorMargins = theme.getDimensionMarginsFromArray("editor.margins", QMargins(5, 5, 5, 5));

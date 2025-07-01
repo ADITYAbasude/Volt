@@ -88,6 +88,23 @@ void Theme::loadJsonTheme(const QString& themePath) {
         }
         VOLT_TRACE_F("Loaded dimension: %1", it.key());
     }
+
+    // Load styles
+    m_styles.clear();
+    QJsonObject styles = root["styles"].toObject();
+    VOLT_THEME_F("Loading %1 styles from theme", styles.size());
+    for (auto it = styles.begin(); it != styles.end(); ++it) {
+        if (it.value().isObject()) {
+            // Convert nested JSON object to string for storage
+            QJsonDocument styleDoc(it.value().toObject());
+            m_styles[it.key()] = QString::fromUtf8(styleDoc.toJson(QJsonDocument::Compact));
+            VOLT_TRACE_F2("Loaded style object: %1 = %2", it.key(), m_styles[it.key()]);
+        } else {
+            // Handle simple string values
+            m_styles[it.key()] = it.value().toString();
+            VOLT_TRACE_F2("Loaded style string: %1 = %2", it.key(), it.value().toString());
+        }
+    }
     
     VOLT_THEME("Theme loading completed successfully!");
 }
@@ -157,4 +174,54 @@ QMargins Theme::getDimensionMarginsFromArray(const QString& key, const QMargins&
     
     VOLT_TRACE_F("Dimension key not found or invalid: %1 - using default", key);
     return defaultValue;
+}
+
+QString Theme::getStyle(const QString& key, QString fallback) const {
+    auto it = m_styles.find(key);
+    if (it != m_styles.end()) {
+        return it->second;
+    }
+    return fallback;
+}
+
+bool Theme::getStyleBool(const QString& styleKey, const QString& property, bool fallback) const {
+    auto it = m_styles.find(styleKey);
+    if (it != m_styles.end()) {
+        QJsonDocument doc = QJsonDocument::fromJson(it->second.toUtf8());
+        if (!doc.isNull()) {
+            QJsonObject obj = doc.object();
+            if (obj.contains(property)) {
+                return obj[property].toBool(fallback);
+            }
+        }
+    }
+    return fallback;
+}
+
+int Theme::getStyleInt(const QString& styleKey, const QString& property, int fallback) const {
+    auto it = m_styles.find(styleKey);
+    if (it != m_styles.end()) {
+        QJsonDocument doc = QJsonDocument::fromJson(it->second.toUtf8());
+        if (!doc.isNull()) {
+            QJsonObject obj = doc.object();
+            if (obj.contains(property)) {
+                return obj[property].toInt(fallback);
+            }
+        }
+    }
+    return fallback;
+}
+
+QString Theme::getStyleString(const QString& styleKey, const QString& property, const QString& fallback) const {
+    auto it = m_styles.find(styleKey);
+    if (it != m_styles.end()) {
+        QJsonDocument doc = QJsonDocument::fromJson(it->second.toUtf8());
+        if (!doc.isNull()) {
+            QJsonObject obj = doc.object();
+            if (obj.contains(property)) {
+                return obj[property].toString(fallback);
+            }
+        }
+    }
+    return fallback;
 }

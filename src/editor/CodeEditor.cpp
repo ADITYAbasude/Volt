@@ -1,5 +1,4 @@
 #include "CodeEditor.h"
-#include "../styles/StyleManager.h"
 #include "../themes/Theme.h"
 
 CodeEditor::CodeEditor(QWidget *parent)
@@ -10,7 +9,7 @@ CodeEditor::CodeEditor(QWidget *parent)
     
     // Set up the editor first
     setupEditor();
-    
+        
     // Apply comprehensive dark theme
     applyTheme();
 }
@@ -22,8 +21,8 @@ void CodeEditor::setupEditor()
     setMarginWidth(0, fontMetrics().horizontalAdvance(QLatin1Char('9')) * 6);
     setMarginLineNumbers(0, true);
     
-    // Set viewport margins
-    setViewportMargins(0, 0, 0, 0);
+    // Set viewport margins for better padding
+    setViewportMargins(5, 0, 5, 0);
 
     // Editor behaviors
     setAutoIndent(true);
@@ -37,13 +36,15 @@ void CodeEditor::setupEditor()
     // Caret settings
     setCaretWidth(2);
 
-    // Scrollbars
+    // Scrollbars - enable smooth scrolling
     SendScintilla(SCI_SETHSCROLLBAR, 1);
     SendScintilla(SCI_SETVSCROLLBAR, 1);
+    SendScintilla(SCI_SETYCARETPOLICY, CARET_SLOP | CARET_EVEN, 0L);
     
     // Enable folding
     setFolding(QsciScintilla::BoxedTreeFoldStyle);
 }
+
 
 void CodeEditor::applyTheme() {
     Theme& theme = Theme::instance();
