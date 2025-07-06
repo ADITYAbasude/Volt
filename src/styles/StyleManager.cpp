@@ -223,8 +223,6 @@ void StyleManager::applyScrollbarPolicy(QWidget *widget) const
         // Apply the policies
         scrollArea->setVerticalScrollBarPolicy(vPolicy);
         scrollArea->setHorizontalScrollBarPolicy(hPolicy);
-
-        VOLT_UI("Applied scrollbar policy to widget: vertical=%1, horizontal=%2", verticalPolicy, horizontalPolicy);
     }
 }
 

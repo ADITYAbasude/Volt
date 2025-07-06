@@ -2,7 +2,11 @@
 <RCC>
     <qresource prefix="/">
         <file>icons/app.ico</file>
-        <file>icons/new_file.ico</file>
-        <file>icons/collapse_all.ico</file>
+        <file>icons/new_file.svg</file>
+        <file>icons/collapse_all.svg</file>
+        <file>icons/folder-closed.png</file>
+        <file>icons/folder-open.png</file>
+        <file>icons/folder.svg</file>
+        <file>icons/search.svg</file>
     </qresource>
 </RCC>

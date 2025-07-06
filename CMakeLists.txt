@@ -24,6 +24,7 @@ find_package(Qt6 REQUIRED COMPONENTS
     Core
     Gui
     Widgets
+    Svg
 )
 qt_standard_project_setup()
 

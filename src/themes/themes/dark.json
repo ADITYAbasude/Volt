@@ -1,5 +1,7 @@
 {
   "colors": {
+    "primary": "#007ACC",
+    "secondary": "#1e1e1e",
     "editor.background": "#1e1e1e",
     "editor.foreground": "#d4d4d4",
     "editor.lineNumber.background": "#1e1e1e",
@@ -23,8 +25,8 @@
 
     "explorer.background": "#252526",
     "explorer.foreground": "#cccccc",
-    "explorer.border": "#454545",
-    "explorer.selectionBackground": "#04395e",
+    "explorer.border": "#FFFFFF",
+    "explorer.selectionBackground": "#37373d",
     "explorer.selectionForeground": "#ffffff",
     "explorer.hoverBackground": "#2a2d2e",
 

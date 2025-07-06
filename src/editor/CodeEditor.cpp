@@ -36,9 +36,9 @@ void CodeEditor::setupEditor()
     // Caret settings
     setCaretWidth(2);
 
-    // Scrollbars - enable smooth scrolling
-    SendScintilla(SCI_SETHSCROLLBAR, 1);
-    SendScintilla(SCI_SETVSCROLLBAR, 1);
+    // Scrollbars: show when needed, and enable smooth scrolling
+    SendScintilla(SCI_SETHSCROLLBAR, 0); // 0 = show when needed
+    SendScintilla(SCI_SETVSCROLLBAR, 0); // 0 = show when needed
     SendScintilla(SCI_SETYCARETPOLICY, CARET_SLOP | CARET_EVEN, 0L);
     
     // Enable folding

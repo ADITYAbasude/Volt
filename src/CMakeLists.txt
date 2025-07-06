@@ -4,6 +4,9 @@ set(SOURCES
     ui/MainWindow.cpp
     ui/statusbar/StatusBar.cpp
     ui/explorer/ProjectExplorer.cpp
+    ui/components/IconButton.cpp
+    ui/components/FilledColorButton.cpp
+    ui/utils/IconUtils.cpp
     editor/CodeEditor.cpp
     themes/Theme.cpp
     styles/StyleManager.cpp
@@ -15,6 +18,9 @@ set(HEADERS
     ui/MainWindow.h
     ui/statusbar/StatusBar.h
     ui/explorer/ProjectExplorer.h
+    ui/components/IconButton.h
+    ui/components/FilledColorButton.h
+    ui/utils/IconUtils.h
     editor/CodeEditor.h
     themes/Theme.h
     styles/StyleManager.h
@@ -72,6 +78,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    Qt6::Svg
     ${QSCINTILLA_LIBRARY}
 )
 

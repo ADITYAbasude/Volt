@@ -1,6 +1,7 @@
 #include "ProjectExplorer.h"
 #include "../../themes/Theme.h"
 #include "../../logging/VoltLogger.h"
+#include "../utils/IconUtils.h"
 
 #include <QFileDialog>
 #include <QHeaderView>
@@ -12,11 +13,32 @@
 #include <QMessageBox>
 #include <QTextStream>
 #include <QFile>
+#include <QTabWidget>
 
 ProjectExplorer::ProjectExplorer(QWidget *parent)
-    : QDockWidget("Explorer", parent), m_centralWidget(nullptr), m_mainLayout(nullptr), m_toolbarLayout(nullptr), m_openFolderButton(nullptr), m_collapseButton(nullptr), m_createFileButton(nullptr), m_pathEdit(nullptr), m_treeView(nullptr), m_fileSystemModel(nullptr)
+    : QDockWidget("Sidebar", parent), 
+    m_tabWidget(nullptr), 
+    m_centralWidget(nullptr), 
+    m_mainLayout(nullptr), 
+    m_toolbarLayout(nullptr), 
+    m_collapseButton(nullptr), 
+    m_createFileButton(nullptr), 
+    m_pathEdit(nullptr), 
+    m_stackedWidget(nullptr), 
+    m_explorerWidget(nullptr), 
+    m_treeView(nullptr), 
+    m_fileSystemModel(nullptr), 
+    m_welcomeWidget(nullptr), 
+    m_welcomeLabel(nullptr), 
+    m_welcomeOpenFolderButton(nullptr), 
+    m_searchWidget(nullptr), 
+    m_sourceControlWidget(nullptr), 
+    m_searchLabel(nullptr), 
+    m_sourceControlLabel(nullptr),
+    m_explorerTopBar(nullptr)
 {
     setupUI();
+    setupTabs();
     setupFileSystemModel();
     applyTheme();
 
@@ -28,38 +50,67 @@ ProjectExplorer::ProjectExplorer(QWidget *parent)
 
 void ProjectExplorer::setupUI()
 {
-    // Create central widget
-    m_centralWidget = new QWidget(this);
-    setWidget(m_centralWidget);
+    // Create the main tab widget
+    m_tabWidget = new QTabWidget(this);
+    m_tabWidget->setTabPosition(QTabWidget::North);
+    m_tabWidget->setTabShape(QTabWidget::Rounded);
+    m_tabWidget->setIconSize(QSize(20, 20));
+    m_tabWidget->setLayoutDirection(Qt::LeftToRight);
+    m_tabWidget->setDocumentMode(true);       // Remove borders around tabs
+    m_tabWidget->setUsesScrollButtons(false); // Disable scroll buttons
+    setWidget(m_tabWidget);
 
-    // Main layout
-    m_mainLayout = new QVBoxLayout(m_centralWidget);
+    // Ensure tabs are aligned left, not centered
+    if (m_tabWidget->tabBar())
+    {
+        m_tabWidget->tabBar()->setLayoutDirection(Qt::LeftToRight);
+        m_tabWidget->tabBar()->setExpanding(false);
+    }
+
+    VOLT_UI("Project Explorer UI setup completed");
+}
+
+void ProjectExplorer::setupTabs()
+{
+    // Create tabs
+    createExplorerTab();
+    createSearchTab();
+    createSourceControlTab();
+
+    VOLT_UI("Project Explorer tabs setup completed");
+}
+
+void ProjectExplorer::createExplorerTab()
+{
+    // Create the explorer widget
+    m_explorerWidget = new QWidget();
+
+    // Main layout for explorer
+    m_mainLayout = new QVBoxLayout(m_explorerWidget);
     m_mainLayout->setSpacing(5);
     m_mainLayout->setContentsMargins(5, 5, 5, 5);
 
-    // Toolbar buttons
-    m_toolbarLayout = new QHBoxLayout();
-    m_openFolderButton = new QPushButton(QIcon::fromTheme("folder-open", QIcon(":/icons/folder-open.png")), QString(), this);
-    m_collapseButton = new QPushButton(QIcon(":/icons/collapse_all.ico"), QString(), this);
-    m_createFileButton = new QPushButton(QIcon(":/icons/new_file.ico"), QString(), this);
 
-    m_openFolderButton->setToolTip("Open Folder");
-    m_collapseButton->setToolTip("Collapse All");
-    m_createFileButton->setToolTip("Create New File");
+    // Top bar layout: icon buttons left, stretch, path label right
+    m_explorerTopBar = new QHBoxLayout();
+    m_explorerTopBar->setSpacing(5);
 
-    m_openFolderButton->setFixedSize(24, 24);
-    m_collapseButton->setFixedSize(24, 24);
-    m_createFileButton->setFixedSize(24, 24);
+    // Create icon buttons using the new IconButton component
+    m_createFileButton = new IconButton(":/icons/new_file.svg", "Create New File", this);
+    m_collapseButton = new IconButton(":/icons/collapse_all.svg", "Collapse All", this);
 
-    m_toolbarLayout->addStretch();
-    m_toolbarLayout->addWidget(m_createFileButton);
-    m_toolbarLayout->addWidget(m_openFolderButton);
-    m_toolbarLayout->addWidget(m_collapseButton);
+    m_explorerTopBar->addWidget(m_createFileButton);
+    m_explorerTopBar->addWidget(m_collapseButton);
+    m_explorerTopBar->addStretch();
 
-    // Path edit
-    m_pathEdit = new QLineEdit(this);
-    m_pathEdit->setPlaceholderText("No folder opened");
-    m_pathEdit->setReadOnly(true);
+    // Path label (right side)
+    m_pathEdit = new QLabel("No folder opened", this);
+    m_pathEdit->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    m_explorerTopBar->addWidget(m_pathEdit);
+
+
+    // Stacked widget
+    m_stackedWidget = new QStackedWidget(this);
 
     // Tree view
     m_treeView = new QTreeView(this);
@@ -69,15 +120,74 @@ void ProjectExplorer::setupUI()
     m_treeView->setSortingEnabled(true);
     m_treeView->sortByColumn(0, Qt::AscendingOrder);
 
-    // Add to layout
-    m_mainLayout->addLayout(m_toolbarLayout);
-    m_mainLayout->addWidget(m_pathEdit);
-    m_mainLayout->addWidget(m_treeView);
+    // Welcome screen
+    m_welcomeWidget = new QWidget(this);
+    QVBoxLayout *welcomeLayout = new QVBoxLayout(m_welcomeWidget);
+    m_welcomeLabel = new QLabel("No Folder Opened", this);
+    m_welcomeLabel->setAlignment(Qt::AlignCenter);
+    m_welcomeOpenFolderButton = new FilledColorButton("Open Folder", FilledColorButton::Primary, this);
+    welcomeLayout->addStretch();
+    welcomeLayout->addWidget(m_welcomeLabel);
+    welcomeLayout->addWidget(m_welcomeOpenFolderButton);
+    welcomeLayout->addStretch();
+
+    m_stackedWidget->addWidget(m_welcomeWidget);
+    m_stackedWidget->addWidget(m_treeView);
+
+
+    // Add to layout: top bar, then stacked widget
+    m_mainLayout->addLayout(m_explorerTopBar);
+    m_mainLayout->addWidget(m_stackedWidget);
 
     // Connect signals
-    connect(m_openFolderButton, &QPushButton::clicked, this, &ProjectExplorer::openFolder);
+    connect(m_welcomeOpenFolderButton, &QPushButton::clicked, this, &ProjectExplorer::openFolder);
     connect(m_collapseButton, &QPushButton::clicked, this, &ProjectExplorer::collapseAll);
     connect(m_createFileButton, &QPushButton::clicked, this, &ProjectExplorer::createNewFile);
+
+    // Add to tab widget
+
+    m_tabWidget->addTab(m_explorerWidget, IconUtils::loadSvgIcon(":/icons/folder.svg", 20), "");
+    m_tabWidget->setTabToolTip(0, "Explorer");
+    m_tabWidget->setCurrentIndex(0);
+    showWelcomeScreen();
+}
+
+void ProjectExplorer::createSearchTab()
+{
+    // Create the search widget
+    m_searchWidget = new QWidget();
+    QVBoxLayout *searchLayout = new QVBoxLayout(m_searchWidget);
+
+    m_searchLabel = new QLabel("Search functionality coming soon...", m_searchWidget);
+    m_searchLabel->setAlignment(Qt::AlignCenter);
+    m_searchLabel->setWordWrap(true);
+
+    searchLayout->addStretch();
+    searchLayout->addWidget(m_searchLabel);
+    searchLayout->addStretch();
+
+    // Add to tab widget
+    m_tabWidget->addTab(m_searchWidget, IconUtils::loadSvgIcon(":/icons/search.svg", 20), "");
+    m_tabWidget->setTabToolTip(1, "Search");
+}
+
+void ProjectExplorer::createSourceControlTab()
+{
+    // Create the source control widget
+    m_sourceControlWidget = new QWidget();
+    QVBoxLayout *sourceControlLayout = new QVBoxLayout(m_sourceControlWidget);
+
+    m_sourceControlLabel = new QLabel("Source Control functionality coming soon...", m_sourceControlWidget);
+    m_sourceControlLabel->setAlignment(Qt::AlignCenter);
+    m_sourceControlLabel->setWordWrap(true);
+
+    sourceControlLayout->addStretch();
+    sourceControlLayout->addWidget(m_sourceControlLabel);
+    sourceControlLayout->addStretch();
+
+    // Add to tab widget
+    // m_tabWidget->addTab(m_sourceControlWidget, QIcon(":/icons/git.svg"), "");
+    // m_tabWidget->setTabToolTip(2, "Source Control");
 }
 
 void ProjectExplorer::setupFileSystemModel()
@@ -106,6 +216,7 @@ void ProjectExplorer::setRootPath(const QString &path)
 {
     if (path.isEmpty())
     {
+        showWelcomeScreen();
         return;
     }
 
@@ -113,6 +224,7 @@ void ProjectExplorer::setRootPath(const QString &path)
     if (!dir.exists())
     {
         VOLT_ERROR_F("Directory does not exist: %1", path);
+        showWelcomeScreen();
         return;
     }
 
@@ -130,6 +242,23 @@ void ProjectExplorer::setRootPath(const QString &path)
 
     VoltLogger::instance().info("Project Explorer root set to: %1", m_currentRootPath);
     emit folderChanged(m_currentRootPath);
+
+    showTreeView();
+}
+
+void ProjectExplorer::showWelcomeScreen()
+{
+    m_stackedWidget->setCurrentWidget(m_welcomeWidget);
+    m_createFileButton->setEnabled(false);
+    m_collapseButton->setEnabled(false);
+    m_pathEdit->setText("No folder opened");
+}
+
+void ProjectExplorer::showTreeView()
+{
+    m_stackedWidget->setCurrentWidget(m_treeView);
+    m_createFileButton->setEnabled(true);
+    m_collapseButton->setEnabled(true);
 }
 
 QString ProjectExplorer::currentRootPath() const
@@ -206,12 +335,20 @@ void ProjectExplorer::applyTheme()
     Theme &theme = Theme::instance();
 
     // Get colors from theme
-    QColor bgColor = theme.getColor("explorer.background", QColor("#252526"));
-    QColor fgColor = theme.getColor("explorer.foreground", QColor("#CCCCCC"));
-    QColor borderColor = theme.getColor("explorer.border", QColor("#454545"));
-    QColor selectionBg = theme.getColor("explorer.selectionBackground", QColor("#04395E"));
-    QColor selectionFg = theme.getColor("explorer.selectionForeground", QColor("#FFFFFF"));
-    QColor hoverBg = theme.getColor("explorer.hoverBackground", bgColor.lighter(110));
+    QColor bgColor = theme.getColor("explorer.background");
+    QColor fgColor = theme.getColor("explorer.foreground");
+    QColor borderColor = theme.getColor("explorer.border");
+    QColor selectionBg = theme.getColor("explorer.selectionBackground");
+    QColor selectionFg = theme.getColor("explorer.selectionForeground");
+    QColor hoverBg = theme.getColor("explorer.hoverBackground");
+
+    // primary color for selection
+    QColor primaryColor = theme.getColor("primary");
+
+    if (primaryColor.isValid() && primaryColor.name().isEmpty())
+    {
+        primaryColor = QColor("#007ACC"); // Default primary color if not set
+    }
 
     // Get font
     QFont explorerFont = theme.getFont("explorer");
@@ -221,27 +358,75 @@ void ProjectExplorer::applyTheme()
     }
 
     // Apply to dock widget
-    QString dockStyle = QString(R"(
-        QDockWidget {
-            background-color: %1;
-            color: %2;
-            border: 1px solid %3;
-            titlebar-close-icon: url(close.png);
-            titlebar-normal-icon: url(undock.png);
-        }
-        QDockWidget::title {
-            background-color: %1;
-            color: %2;
-            padding: 5px;
-            border-bottom: 1px solid %3;
-            font-weight: bold;
-        }
-    )")
-                            .arg(bgColor.name())
-                            .arg(fgColor.name())
-                            .arg(borderColor.name());
+    QString tabStyle = QString(R"(
+    QTabWidget::pane {
+        border: none;
+        background-color: %1;
+        border-top: 1px solid %9;
+    }
+    QTabWidget::tab-bar {
+        alignment: left;
+        align-items: left;
+        left: 0px;
+    }
+    QTabBar {
+        background: %1;
+        border: none;
+        alignment: left;
+        align-items: left;
+        qproperty-drawBase: 0;
+        subcontrol-position: top;
+        qproperty-expanding: false;
+        text-align: left;
+    }
+    QTabBar::tab {
+        background: %1;
+        color: %2;
+        border: none;
+        min-width: 26px;
+        max-width: 26px;
+        min-height: 26px;
+        max-height: 26px;
+        margin: 0;
+        padding: 0 0 0 2px;
+        border-radius: 0;
+    }
+    QTabBar::tab:selected {
+        background: %1;
+        color: #FFFFFF;
+        border-bottom: 1px solid %9;
+    }
+    QTabBar::tab:hover:!selected {
+        background: %1;
+        color: %2;
+    }
+    QTabBar::tab:!selected {
+        opacity: 0.6;
+        background: %1;
+        color: %2;
+    }
+    QTabBar::tab:first {
+        margin-left: 0;
+    }
+    QTabBar::tab:last {
+        margin-right: 0;
+    }
+    QTabBar::close-button {
+        image: none;
+        subcontrol-position: right;
+    }
+)")
+                           .arg(bgColor.name())                 // %1 - content background
+                           .arg(fgColor.name())                 // %2 - icon color
+                           .arg(borderColor.name())             // %3 - border (not used)
+                           .arg(selectionBg.name())             // %4 - selection background (not used)
+                           .arg(selectionFg.name())             // %5 - selection icon color
+                           .arg(hoverBg.name())                 // %6 - hover background
+                           .arg(borderColor.darker(250).name()) // %7 - tab bar background (darker for sidebar)
+                           .arg(borderColor.name())             // %8 - border color
+                           .arg(primaryColor.name());           // %9 - primary color for selection
 
-    setStyleSheet(dockStyle);
+    m_tabWidget->setStyleSheet(tabStyle);
 
     // Apply to tree view
     QString treeStyle = QString(R"(
@@ -254,8 +439,8 @@ void ProjectExplorer::applyTheme()
             font-size: %7pt;
         }
         QTreeView::item {
-            padding: 3px;
-            border: none;
+            padding: 5px;
+            border-radius: 3px;
         }
         QTreeView::item:hover {
             background-color: %5;
@@ -280,33 +465,7 @@ void ProjectExplorer::applyTheme()
                             .arg(explorerFont.pointSize()); // %7 - font size
 
     m_treeView->setStyleSheet(treeStyle);
-
-    // Apply to buttons
-    QString buttonStyle = QString(R"(
-        QPushButton {
-            background-color: transparent;
-            color: %1;
-            border: 1px solid transparent;
-            padding: 2px;
-            font-family: "%3";
-            font-size: %4pt;
-        }
-        QPushButton:hover {
-            background-color: %2;
-            border: 1px solid %2;
-        }
-        QPushButton:pressed {
-            background-color: %2;
-        }
-    )")
-                              .arg(fgColor.name())
-                              .arg(hoverBg.name())
-                              .arg(explorerFont.family())
-                              .arg(explorerFont.pointSize());
-
-    m_openFolderButton->setStyleSheet(buttonStyle);
-    m_collapseButton->setStyleSheet(buttonStyle);
-    m_createFileButton->setStyleSheet(buttonStyle);
+    m_treeView->setIndentation(15);
 
     // Apply to path edit
     QString pathStyle = QString(R"(
@@ -326,6 +485,25 @@ void ProjectExplorer::applyTheme()
                             .arg(explorerFont.pointSize());
 
     m_pathEdit->setStyleSheet(pathStyle);
+
+    // Apply to welcome label
+    m_welcomeLabel->setFont(explorerFont);
+    m_welcomeLabel->setStyleSheet(QString("color: %1;").arg(fgColor.name()));
+
+    // Apply to other tab labels
+    if (m_searchLabel)
+    {
+        m_searchLabel->setFont(explorerFont);
+        m_searchLabel->setStyleSheet(QString("color: %1;").arg(fgColor.name()));
+    }
+
+    if (m_sourceControlLabel)
+    {
+        m_sourceControlLabel->setFont(explorerFont);
+        m_sourceControlLabel->setStyleSheet(QString("color: %1;").arg(fgColor.name()));
+    }
+
+    // The IconButton and FilledColorButton components handle their own styling
 
     VOLT_UI("Project Explorer theme applied successfully");
 }
