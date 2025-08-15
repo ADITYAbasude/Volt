@@ -33,6 +33,9 @@ public:
 
     QString getStyle(const QString& key, QString fallback = QString()) const;
     
+    // Carbon icon helper
+    QChar getCarbonIconChar(const QString& iconName) const;
+    
     // Style helper methods for accessing nested properties
     bool getStyleBool(const QString& styleKey, const QString& property, bool fallback = false) const;
     int getStyleInt(const QString& styleKey, const QString& property, int fallback = 0) const;

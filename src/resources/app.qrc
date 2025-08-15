@@ -6,7 +6,7 @@
         <file>icons/collapse_all.svg</file>
         <file>icons/folder-closed.png</file>
         <file>icons/folder-open.png</file>
-        <file>icons/folder.svg</file>
-        <file>icons/search.svg</file>
+        <file>icons/icons-carbon.json</file>
+        <file>fonts/icons-carbon.ttf</file>
     </qresource>
 </RCC>

@@ -1,9 +1,10 @@
 
 #pragma once
 #include <QMainWindow>
+#include <QTabWidget>
 #include "menubar/FileMenu.h"
 #include "statusbar/StatusBar.h"
-#include "explorer/ProjectExplorer.h"
+#include "Sidebar/Sidebar.h"
 #include "../editor/CodeEditor.h"
 
 class MainWindow : public QMainWindow
@@ -28,13 +29,13 @@ private:
     void setupMenuBar();
     void setupStatusBar();
     void setupEditor();
-    void setupProjectExplorer();
+    void setupSidebar();
     void applyTheme();
     
     // UI elements
     StatusBar *statusBar;
     FileMenu *fileMenu;
-    CodeEditor *editor;
-    ProjectExplorer *projectExplorer;
+    QTabWidget *editorTab;
+    Sidebar *sidebar;
 };
 

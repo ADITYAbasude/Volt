@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     setupEditor();
     setupMenuBar();
     setupStatusBar();
-    setupProjectExplorer();
+    setupSidebar();
     applyTheme();
 
     // Connect theme change signal to refresh all components
@@ -29,19 +29,28 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 void MainWindow::setupEditor()
 {
     // Create and set the editor as central widget
-    editor = new CodeEditor(this);
-    setCentralWidget(editor);
+    CodeEditor *editor = new CodeEditor(this);
+    // setCentralWidget(editor); //! have to remove
+
+    // setup QTab centeral widget
+    editorTab = new QTabWidget(this);
+    setCentralWidget(editorTab);
 
     // Apply scrollbar policy to the editor
     StyleManager::setupWidgetScrollbars(editor);
 
-    // Add some sample text to verify the editor is working
+    // TODO: Show here welcome tab instead to this welcome message
+    //  Add some sample text to verify the editor is working
     editor->setText("// Welcome to Volt Editor\n\n"
                     "#include <iostream>\n\n"
                     "int main() {\n"
                     "    std::cout << \"Hello, World!\" << std::endl;\n"
                     "    return 0;\n"
                     "}\n");
+
+    int idx = editorTab->addTab(editor, "Welcome");
+    editorTab->setTabToolTip(idx, "Welcome");
+    editorTab->setTabIcon(idx, QIcon(":/icons/app.ico"));
 }
 
 void MainWindow::setupMenuBar()
@@ -56,13 +65,13 @@ void MainWindow::setupStatusBar()
     setStatusBar(statusBar);
 }
 
-void MainWindow::setupProjectExplorer()
+void MainWindow::setupSidebar()
 {
-    projectExplorer = new ProjectExplorer(this);
-    addDockWidget(Qt::LeftDockWidgetArea, projectExplorer);
+    sidebar = new Sidebar(this);
+    addDockWidget(Qt::LeftDockWidgetArea, sidebar);
 
-    // Connect project explorer signals
-    connect(projectExplorer, &ProjectExplorer::fileDoubleClicked,
+    // Connect sidebar signals
+    connect(sidebar, &Sidebar::fileDoubleClicked,
             this, &MainWindow::openFile);
 }
 
@@ -79,13 +88,23 @@ void MainWindow::applyTheme()
 
     // Apply editor margins from JSON
     QMargins editorMargins = theme.getDimensionMarginsFromArray("editor.margins", QMargins(5, 5, 5, 5));
-    if (editor)
-    {
-        editor->setContentsMargins(editorMargins);
+    int tabWidth = theme.getDimensionInt("editor.tabWidth", 4);
 
-        // Apply tab width from JSON
-        int tabWidth = theme.getDimensionInt("editor.tabWidth", 4);
-        editor->setTabWidth(tabWidth);
+    if (editorTab)
+    {
+        for (int i = 0; i < editorTab->count(); ++i)
+        {
+            CodeEditor *ed = qobject_cast<CodeEditor *>(editorTab->widget(i));
+            if (ed)
+            {
+                ed->refreshTheme();
+            }
+        }
+    }
+
+    if (statusBar)
+    {
+        statusBar->applyTheme();
     }
 
     // Apply menu styling from JSON
@@ -176,9 +195,16 @@ void MainWindow::onThemeChanged()
     VOLT_THEME("Theme changed, refreshing MainWindow components");
     applyTheme();
 
-    if (editor)
+    if (editorTab)
     {
-        editor->refreshTheme();
+        for (int i = 0; i < editorTab->count(); i++)
+        {
+            CodeEditor *ed = qobject_cast<CodeEditor *>(editorTab->widget(i));
+            if (ed)
+            {
+                ed->refreshTheme();
+            }
+        }
     }
 
     if (statusBar)
@@ -187,12 +213,37 @@ void MainWindow::onThemeChanged()
     }
 }
 
+static int findTabIndexForPath(QTabWidget *tabWidget, const QString &filePath)
+{
+    if (!tabWidget || filePath.isEmpty())
+        return -1;
+
+    for (int i = 0; i < tabWidget->count(); ++i)
+    {
+        // Use tabToolTip to store file path for each tab
+        QString tabPath = tabWidget->tabToolTip(i);
+        if (tabPath == filePath)
+            return i;
+    }
+    return -1;
+}
+
 void MainWindow::openFile(const QString &filePath)
 {
+    // create new editor tab
+
     QFileInfo fileInfo(filePath);
     if (!fileInfo.exists() || !fileInfo.isFile())
     {
         QMessageBox::warning(this, "Error", "File does not exist: " + filePath);
+        return;
+    }
+
+    // Check that this file is not already open
+    int existingIndex = findTabIndexForPath(editorTab, filePath);
+    if (existingIndex != -1)
+    {
+        editorTab->setCurrentIndex(existingIndex);
         return;
     }
 
@@ -207,7 +258,15 @@ void MainWindow::openFile(const QString &filePath)
     QString content = in.readAll();
     file.close();
 
+    // create new editor instance
+    CodeEditor *editor = new CodeEditor(this);
     editor->setText(content);
+
+    int idx = editorTab->addTab(editor, fileInfo.fileName());
+    editorTab->setTabToolTip(idx, fileInfo.fileName());
+    editorTab->setTabIcon(idx, QIcon(":/icons/app.ico"));
+    editorTab->setCurrentIndex(idx);
+
     setWindowTitle(QString("Volt Editor - %1").arg(fileInfo.fileName()));
 
     VoltLogger::instance().info("Opened file: %1", filePath);
@@ -215,9 +274,9 @@ void MainWindow::openFile(const QString &filePath)
 
 void MainWindow::openFolder(const QString &folderPath)
 {
-    if (projectExplorer)
+    if (sidebar)
     {
-        projectExplorer->setRootPath(folderPath);
+        sidebar->setRootPath(folderPath);
         VoltLogger::instance().info("Opened folder: %1", folderPath);
     }
 }

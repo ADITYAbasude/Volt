@@ -6,6 +6,7 @@
 #include "themes/Theme.h"
 #include "logging/VoltLogger.h"
 #include <QIcon>
+#include <QFontDatabase>
 
 int main(int argc, char *argv[])
 {
@@ -41,6 +42,22 @@ int main(int argc, char *argv[])
     VOLT_INFO_F("Application started with %1 arguments", argc);
     VOLT_DEBUG_F("Working directory: %1", QDir::currentPath());
     VOLT_DEBUG_F("Application directory: %1", app.applicationDirPath());
+
+    // Initialize the resource system
+    VOLT_SYSTEM("Initializing resource system...");
+    int fontId = QFontDatabase::addApplicationFont(":/fonts/icons-carbon.ttf");
+    if (fontId == -1) {
+        VOLT_ERROR("Failed to load icons-carbon.ttf font!");
+        return EXIT_FAILURE;
+    } else {
+        VOLT_DEBUG_F("icons-carbon.ttf loaded, fontId: %1", fontId);
+    }
+
+    QStringList loadedFamilies = QFontDatabase::applicationFontFamilies(fontId);
+    VOLT_DEBUG_F("Loaded font families: %1", loadedFamilies.join(", "));
+
+    QFont iconFont("icons-carbon");
+    iconFont.setPointSize(16);
 
     // Check for file/folder argument from context menu
     const QStringList positionalArgs = parser.positionalArguments();

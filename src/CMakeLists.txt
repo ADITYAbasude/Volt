@@ -3,7 +3,8 @@ set(SOURCES
     ui/menubar/FileMenu.cpp
     ui/MainWindow.cpp
     ui/statusbar/StatusBar.cpp
-    ui/explorer/ProjectExplorer.cpp
+    ui/sidebar/Sidebar.cpp
+    ui/sidebar/CustomTreeView.cpp
     ui/components/IconButton.cpp
     ui/components/FilledColorButton.cpp
     ui/utils/IconUtils.cpp
@@ -17,7 +18,8 @@ set(HEADERS
     ui/menubar/FileMenu.h
     ui/MainWindow.h
     ui/statusbar/StatusBar.h
-    ui/explorer/ProjectExplorer.h
+    ui/sidebar/Sidebar.h
+    ui/sidebar/CustomTreeView.h
     ui/components/IconButton.h
     ui/components/FilledColorButton.h
     ui/utils/IconUtils.h

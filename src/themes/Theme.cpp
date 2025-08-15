@@ -225,3 +225,46 @@ QString Theme::getStyleString(const QString& styleKey, const QString& property, 
     }
     return fallback;
 }
+
+QChar Theme::getCarbonIconChar(const QString& iconName) const {
+    QFile file(":/icons/icons-carbon.json");
+    if (!file.open(QIODevice::ReadOnly)) {
+        VOLT_ERROR("Failed to open icons-carbon.json file");
+        return QChar(); // Return invalid character
+    }
+
+    QByteArray data = file.readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(data);
+    
+    if (doc.isNull()) {
+        VOLT_ERROR("Failed to parse icons-carbon.json file");
+        return QChar();
+    }
+
+    QJsonObject root = doc.object();
+    QJsonObject iconDefinitions = root["iconDefinitions"].toObject();
+    
+    if (!iconDefinitions.contains(iconName)) {
+        VOLT_ERROR_F("Icon '%1' not found in icons-carbon.json", iconName);
+        return QChar();
+    }
+
+    QJsonObject iconObj = iconDefinitions[iconName].toObject();
+    QString fontCharacter = iconObj["fontCharacter"].toString();
+    
+    // Convert unicode escape sequence (e.g., "\\e081") to actual unicode value
+    if (fontCharacter.startsWith("\\e")) {
+        bool ok;
+        // Extract the hex part after \e (e.g., "081" from "\\e081")
+        QString hexPart = fontCharacter.mid(2);
+        // Convert to unicode value, adding 0xe000 base for private use area
+        int unicodeValue = 0xe000 + hexPart.toInt(&ok, 16);
+        if (ok) {
+            return QChar(unicodeValue);
+        }
+    }
+    
+    VOLT_ERROR_F("Invalid font character format for icon '%1'", iconName);
+    VOLT_ERROR_F("Font character value was: %1", fontCharacter);
+    return QChar();
+}
