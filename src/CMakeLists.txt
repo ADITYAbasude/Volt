@@ -9,6 +9,7 @@ set(SOURCES
     ui/components/FilledColorButton.cpp
     ui/utils/IconUtils.cpp
     editor/CodeEditor.cpp
+    editor/Minimap.cpp
     themes/Theme.cpp
     styles/StyleManager.cpp
     logging/VoltLogger.cpp
@@ -24,6 +25,7 @@ set(HEADERS
     ui/components/FilledColorButton.h
     ui/utils/IconUtils.h
     editor/CodeEditor.h
+    editor/Minimap.h
     themes/Theme.h
     styles/StyleManager.h
     logging/VoltLogger.h

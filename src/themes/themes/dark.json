@@ -12,6 +12,7 @@
     "editor.selectionForeground": "#ffffff",
     "editor.currentLine": "#2a2d2e",
     "editor.matchingBrace": "#ffd700",
+    "editor.tab.background": "#202222",
 
     "statusBar.background": "#007acc",
     "statusBar.foreground": "#ffffff",

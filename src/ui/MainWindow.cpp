@@ -1,12 +1,21 @@
 #include "MainWindow.h"
 #include <QMenuBar>
 #include <QStatusBar>
+#include <QTabBar>
+#include <QMenu>
+#include <QAction>
+#include <QCursor>
+#include <QApplication>
+#include <QGuiApplication>
+#include <QClipboard>
 #include <QFileInfo>
 #include <QTextStream>
 #include <QMessageBox>
 #include <QAction>
 #include <QKeySequence>
 #include "../editor/CodeEditor.h"
+#include "../editor/Minimap.h"
+#include <QHBoxLayout>
 #include "../themes/Theme.h"
 #include "../logging/VoltLogger.h"
 #include "../styles/StyleManager.h"
@@ -34,13 +43,49 @@ void MainWindow::setupEditor()
 
     // setup QTab centeral widget
     editorTab = new QTabWidget(this);
+    editorTab->setTabsClosable(true); // Make tabs closable
+    editorTab->setMovable(true);      // Allow tab reordering
     setCentralWidget(editorTab);
+
+    // Improve tab appearance
+    if (editorTab->tabBar())
+    {
+        QTabBar *tb = editorTab->tabBar();
+        tb->setElideMode(Qt::ElideRight);
+        tb->setExpanding(false);
+        tb->setUsesScrollButtons(true);
+        tb->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(tb, &QTabBar::customContextMenuRequested, this, &MainWindow::onTabContextMenuRequested);
+    }
+
+    // Connect tab close signal
+    connect(editorTab, &QTabWidget::tabCloseRequested, this, &MainWindow::onTabCloseRequested);
+    
+    // Connect tab change signal to refresh themes
+    connect(editorTab, &QTabWidget::currentChanged, this, &MainWindow::onCurrentTabChanged);
 
     // Apply scrollbar policy to the editor
     StyleManager::setupWidgetScrollbars(editor);
+    
+    // Remove focus outline from editor
+    editor->setStyleSheet("QsciScintilla { border: none; outline: none; }");
 
     // TODO: Show here welcome tab instead to this welcome message
-    //  Add some sample text to verify the editor is working
+    // Create a container widget that holds the editor and minimap side-by-side
+    QWidget *container = new QWidget(this);
+    QHBoxLayout *h = new QHBoxLayout(container);
+    h->setContentsMargins(0,0,0,0);
+    h->setSpacing(4);
+    container->setLayout(h);
+
+    // Add editor into container
+    h->addWidget(editor, 1);
+
+    // Create minimap for this editor
+    Minimap *minimap = new Minimap(editor, container);
+    h->addWidget(minimap);
+
+    // Sample welcome content
     editor->setText("// Welcome to Volt Editor\n\n"
                     "#include <iostream>\n\n"
                     "int main() {\n"
@@ -48,7 +93,7 @@ void MainWindow::setupEditor()
                     "    return 0;\n"
                     "}\n");
 
-    int idx = editorTab->addTab(editor, "Welcome");
+    int idx = editorTab->addTab(container, "Welcome");
     editorTab->setTabToolTip(idx, "Welcome");
     editorTab->setTabIcon(idx, QIcon(":/icons/app.ico"));
 }
@@ -181,6 +226,40 @@ void MainWindow::applyTheme()
         qDebug() << "Applied menu theme - Background:" << menuBg.name() << "Height:" << menuItemHeight;
     }
 
+    // Style the tab bar according to theme
+    if (editorTab && editorTab->tabBar())
+    {
+        QColor tabBg = theme.getColor("editor.tab.background");
+        QColor tabFg = theme.getColor("tabs.foreground", QColor("#dcdcdc"));
+        QColor tabSelBg = theme.getColor("secondary");
+        QColor primary = theme.getColor("primary");
+        QColor tabSelFg = theme.getColor("tabs.selectedForeground", QColor("#ffffff"));
+
+        QString tabStyle = QString(R"(
+            QTabBar::tab {
+                background: %1;
+                color: %2;
+                padding: 6px 10px;
+                margin-right: 2px;
+            }
+            QTabBar::tab:selected {
+                background: %3;
+                color: %4;
+                border-top: 2px solid %5;
+            }
+            QTabBar::tab:!selected {
+                margin-top: 2px;
+            }
+        )")
+                               .arg(tabBg.name())
+                               .arg(tabFg.name())
+                               .arg(tabSelBg.name())
+                               .arg(tabSelFg.name())
+                               .arg(primary.name());
+
+        editorTab->tabBar()->setStyleSheet(tabStyle);
+    }
+
     // Apply theme to status bar
     if (statusBar)
     {
@@ -215,16 +294,48 @@ void MainWindow::onThemeChanged()
 
 static int findTabIndexForPath(QTabWidget *tabWidget, const QString &filePath)
 {
+    VOLT_DEBUG_F("Finding tab index for path: %1", filePath);
     if (!tabWidget || filePath.isEmpty())
+    {
+        VOLT_DEBUG("Invalid tab widget or file path");
         return -1;
+    }
 
+    VOLT_DEBUG_F("Tab count: %1", tabWidget->count());
     for (int i = 0; i < tabWidget->count(); ++i)
     {
-        // Use tabToolTip to store file path for each tab
+        VOLT_DEBUG_F("Checking tab %1", i);
+
+        // Prefer tabData (we will store full path there)
+        QVariant data;
+        if (tabWidget->tabBar())
+        {
+            data = tabWidget->tabBar()->tabData(i);
+        }
+        if (data.isValid() && data.toString() == filePath)
+        {
+            VOLT_DEBUG_F2("Found tab %1 for path: %2 (tabData)", i, filePath);
+            return i;
+        }
+
+        // Fallback: check tooltip (older code stored file name here)
         QString tabPath = tabWidget->tabToolTip(i);
         if (tabPath == filePath)
+        {
+            VOLT_DEBUG_F2("Found tab %1 for path: %2 (tooltip)", i, filePath);
             return i;
+        }
+
+        // Also compare displayed tab text (filename) as a last resort
+        QString tabText = tabWidget->tabText(i);
+        if (tabText == QFileInfo(filePath).fileName())
+        {
+            VOLT_DEBUG_F2("Found tab %1 for path: %2 (tabText)", i, filePath);
+            return i;
+        }
     }
+
+    VOLT_DEBUG_F("No tab found for path: %1", filePath);
     return -1;
 }
 
@@ -261,9 +372,30 @@ void MainWindow::openFile(const QString &filePath)
     // create new editor instance
     CodeEditor *editor = new CodeEditor(this);
     editor->setText(content);
+    
+    // Apply theme and scrollbars to new editor
+    StyleManager::setupWidgetScrollbars(editor);
+    editor->refreshTheme();
+    
+    // Remove focus outline from editor
+    editor->setStyleSheet("QsciScintilla { border: none; outline: none; }");
 
-    int idx = editorTab->addTab(editor, fileInfo.fileName());
-    editorTab->setTabToolTip(idx, fileInfo.fileName());
+    // Wrap editor and minimap in container so both appear inside the tab
+    QWidget *container = new QWidget(this);
+    QHBoxLayout *h = new QHBoxLayout(container);
+    h->setContentsMargins(0,0,0,0);
+    h->setSpacing(4);
+    container->setLayout(h);
+    h->addWidget(editor, 1);
+    Minimap *minimap = new Minimap(editor, container);
+    h->addWidget(minimap);
+
+    int idx = editorTab->addTab(container, fileInfo.fileName());
+    editorTab->setTabToolTip(idx, filePath); // Store full path in tooltip
+    if (editorTab->tabBar())
+    {
+        editorTab->tabBar()->setTabData(idx, filePath); // Store full path in tab bar data for quick lookup
+    }
     editorTab->setTabIcon(idx, QIcon(":/icons/app.ico"));
     editorTab->setCurrentIndex(idx);
 
@@ -278,5 +410,119 @@ void MainWindow::openFolder(const QString &folderPath)
     {
         sidebar->setRootPath(folderPath);
         VoltLogger::instance().info("Opened folder: %1", folderPath);
+    }
+}
+
+void MainWindow::onTabCloseRequested(int index)
+{
+    if (!editorTab || index < 0 || index >= editorTab->count())
+        return;
+
+    QWidget *widget = editorTab->widget(index);
+    editorTab->removeTab(index);
+    if (widget)
+        widget->deleteLater();
+
+    // Update window title to reflect current tab
+    int currentIndex = editorTab->currentIndex();
+    if (currentIndex >= 0)
+    {
+        QVariant data;
+        if (editorTab->tabBar())
+        {
+            data = editorTab->tabBar()->tabData(currentIndex);
+        }
+        QString path = data.toString();
+        QFileInfo fi(path);
+        QString name = fi.exists() ? fi.fileName() : editorTab->tabText(currentIndex);
+        setWindowTitle(QString("Volt Editor - %1").arg(name));
+    }
+    else
+    {
+        setWindowTitle("Volt Editor");
+    }
+}
+
+void MainWindow::onTabContextMenuRequested(const QPoint &pos)
+{
+    QTabBar *tb = editorTab ? editorTab->tabBar() : nullptr;
+    if (!tb)
+        return;
+
+    int idx = tb->tabAt(pos);
+    if (idx < 0)
+        return;
+
+    QMenu menu(this);
+    QAction *closeAct = menu.addAction("Close");
+    QAction *closeOthers = menu.addAction("Close Others");
+    QAction *closeRight = menu.addAction("Close Tabs to the Right");
+    QAction *copyPath = menu.addAction("Copy Path");
+
+    QAction *selected = menu.exec(tb->mapToGlobal(pos));
+    if (!selected)
+        return;
+
+    if (selected == closeAct)
+    {
+        onTabCloseRequested(idx);
+    }
+    else if (selected == closeOthers)
+    {
+        for (int i = editorTab->count() - 1; i >= 0; --i)
+        {
+            if (i != idx)
+                onTabCloseRequested(i);
+        }
+    }
+    else if (selected == closeRight)
+    {
+        for (int i = editorTab->count() - 1; i > idx; --i)
+        {
+            onTabCloseRequested(i);
+        }
+    }
+    else if (selected == copyPath)
+    {
+        QVariant data;
+        if (editorTab->tabBar())
+            data = editorTab->tabBar()->tabData(idx);
+        QString path = data.isValid() ? data.toString() : editorTab->tabToolTip(idx);
+        QGuiApplication::clipboard()->setText(path);
+    }
+}
+
+void MainWindow::onCurrentTabChanged(int index)
+{
+    // Refresh theme on all editors when tab changes to prevent color issues
+    if (editorTab)
+    {
+        for (int i = 0; i < editorTab->count(); ++i)
+        {
+            CodeEditor *ed = qobject_cast<CodeEditor *>(editorTab->widget(i));
+            if (ed)
+            {
+                ed->refreshTheme();
+                StyleManager::setupWidgetScrollbars(ed);
+            }
+        }
+    }
+    
+    // Update window title
+    if (index >= 0 && index < editorTab->count())
+    {
+        QVariant data;
+        if (editorTab->tabBar())
+        {
+            data = editorTab->tabBar()->tabData(index);
+        }
+        QString path = data.toString();
+        QFileInfo fi(path);
+        QString name = fi.exists() ? fi.fileName() : editorTab->tabText(index);
+        setWindowTitle(QString("Volt Editor - %1").arg(name));
+    }
+    else
+    {
+        setWindowTitle("Volt Editor");
     }
 }

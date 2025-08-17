@@ -245,7 +245,7 @@ QChar Theme::getCarbonIconChar(const QString& iconName) const {
     QJsonObject iconDefinitions = root["iconDefinitions"].toObject();
     
     if (!iconDefinitions.contains(iconName)) {
-        VOLT_ERROR_F("Icon '%1' not found in icons-carbon.json", iconName);
+        // VOLT_ERROR_F("Icon '%1' not found in icons-carbon.json", iconName);
         return QChar();
     }
 

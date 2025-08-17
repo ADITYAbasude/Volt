@@ -1,5 +1,6 @@
 #include "CodeEditor.h"
 #include "../themes/Theme.h"
+#include "./logging/VoltLogger.h"
 
 CodeEditor::CodeEditor(QWidget *parent)
     : QsciScintilla(parent), lexer(nullptr)
@@ -51,10 +52,6 @@ void CodeEditor::applyTheme() {
     
     // Get colors from theme (with sensible fallbacks only if JSON completely fails)
     QColor bg = theme.getColor("editor.background");
-    if (!bg.isValid()) {
-        bg = QColor("#1e1e1e");
-        qDebug() << "Using fallback background color";
-    }
     
     QColor fg = theme.getColor("editor.foreground");
     if (!fg.isValid()) {
@@ -62,8 +59,7 @@ void CodeEditor::applyTheme() {
         qDebug() << "Using fallback foreground color";
     }
     
-    QColor marginBg = theme.getColor("editor.lineNumber.background");
-    if (!marginBg.isValid()) marginBg = bg;
+    QColor marginBg = theme.getColor("secondary");
     
     QColor marginFg = theme.getColor("editor.lineNumber.foreground");
     if (!marginFg.isValid()) marginFg = QColor("#858585");
@@ -141,10 +137,44 @@ void CodeEditor::applyTheme() {
     setColor(fg);
     setFont(editorFont);
     
-    // === STEP 4: MARGINS ===
+    setAutoFillBackground(true);
+    setAttribute(Qt::WA_OpaquePaintEvent, true);
+    QPalette pal = palette();
+    pal.setColor(QPalette::Base, bg);
+    pal.setColor(QPalette::Window, bg);
+    setPalette(pal);
+    setBackgroundRole(QPalette::Base);
+    setBraceMatching(QsciScintilla::SloppyBraceMatch);
+
+    VoltLogger::VOLT_DEBUG_F("Margin background color: %1", marginBg.name());
     setMarginsBackgroundColor(marginBg);
+
+    // Remove widget frame / focus outline so the editor blends into the tab
+    // area and doesn't show an outer border.
+    setFrameStyle(QFrame::NoFrame);
+    setStyleSheet("QsciScintilla { border: none; outline: none; }");
+
+    // Force margins to use the editor background (fall back to marginBg if
+    // explicitly set in theme). This fixes white/bright gutters.
+    QColor gutterBg = marginBg.isValid() ? marginBg : bg;
+    
+    setMarginsBackgroundColor(gutterBg);
     setMarginsForegroundColor(marginFg);
     setMarginsFont(editorFont);
+    // Also set fold margin colors to match
+    setFoldMarginColors(gutterBg, gutterBg.darker(110));
+
+    // Make sure the Scintilla line-number style and markers use the same
+    // gutter background/foreground so the margin doesn't show the default
+    // (often white) background in some environments.
+    SendScintilla(SCI_STYLESETBACK, STYLE_LINENUMBER, gutterBg.rgb());
+    SendScintilla(SCI_STYLESETFORE, STYLE_LINENUMBER, marginFg.rgb());
+
+    // Ensure markers (breakpoints, bookmarks, etc.) blend with the gutter.
+    for (int m = 0; m < 32; ++m) {
+        SendScintilla(SCI_MARKERSETBACK, m, gutterBg.rgb());
+        SendScintilla(SCI_MARKERSETFORE, m, marginFg.rgb());
+    }
     
     // === STEP 5: SELECTION ===
     setSelectionBackgroundColor(selectionBg);
@@ -254,6 +284,9 @@ void CodeEditor::applyTheme() {
     update();
     viewport()->update();
     repaint();
+
+    // Ensure margin width matches current font metrics (avoid narrow/oversized gutter)
+    setMarginWidth(0, fontMetrics().horizontalAdvance(QLatin1Char('9')) * 6);
     
     qDebug() << "=== THEME APPLICATION COMPLETED ===";
 }

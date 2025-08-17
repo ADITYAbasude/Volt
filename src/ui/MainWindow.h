@@ -23,6 +23,10 @@ public:
 
 private slots:
     void onThemeChanged();
+    void onTabCloseRequested(int index);
+    void onCurrentTabChanged(int index);
+    void onTabContextMenuRequested(const QPoint &pos);
+    
 
 private:
     // Setup functions
