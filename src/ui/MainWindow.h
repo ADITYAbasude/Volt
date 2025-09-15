@@ -4,7 +4,7 @@
 #include <QTabWidget>
 #include "menubar/FileMenu.h"
 #include "statusbar/StatusBar.h"
-#include "Sidebar/Sidebar.h"
+#include "sidebar/Sidebar.h"
 #include "../editor/CodeEditor.h"
 
 class MainWindow : public QMainWindow
