@@ -20,16 +20,5 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Svg)
 
 qt_standard_project_setup()
 
-#find QScintilla library
-find_library(QSCINTILLA_LIBRARY
-    NAMES qscintilla2_qt6 libqscintilla2_qt6
-)
-
-if(NOT QSCINTILLA_LIBRARY)
-    message(FATAL_ERROR "QScintilla library not found. Please install libqscintilla2-qt6-dev or equivalent package")
-endif()
-
-message(STATUS "Found QScintilla: ${QSCINTILLA_LIBRARY}")
-
 #add the src directory to the build
 add_subdirectory(src)
