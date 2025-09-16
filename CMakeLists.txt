@@ -1,31 +1,35 @@
 cmake_minimum_required(VERSION 3.16)
+
 project(Volt LANGUAGES CXX)
 
+#sets C++ standard to 17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#enable QTs automatic build tools
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Set Qt's MinGW compiler and tools
-set(CMAKE_C_COMPILER "C:/Qt/Tools/mingw1310_64/bin/gcc.exe")
-set(CMAKE_CXX_COMPILER "C:/Qt/Tools/mingw1310_64/bin/g++.exe")
+#disable stack protector for MinGW
+if(MINGW)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-stack-protector")
+endif()
 
-# Set Qt path
-set(CMAKE_PREFIX_PATH "C:/Qt/6.9.0/mingw_64")
+#find Qt packages
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Svg)
 
-# Disable stack protector for MinGW
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-stack-protector")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-stack-protector")
-
-
-# Find Qt packages
-find_package(Qt6 REQUIRED COMPONENTS 
-    Core
-    Gui
-    Widgets
-    Svg
-)
 qt_standard_project_setup()
 
+#find QScintilla library
+find_library(QSCINTILLA_LIBRARY
+    NAMES qscintilla2_qt6 libqscintilla2_qt6
+)
+
+if(NOT QSCINTILLA_LIBRARY)
+    message(FATAL_ERROR "QScintilla library not found. Please install libqscintilla2-qt6-dev or equivalent package")
+endif()
+
+message(STATUS "Found QScintilla: ${QSCINTILLA_LIBRARY}")
+
+#add the src directory to the build
 add_subdirectory(src)

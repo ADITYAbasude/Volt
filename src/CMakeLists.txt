@@ -1,3 +1,4 @@
+#define source files and header files
 set(SOURCES
     main.cpp
     ui/menubar/FileMenu.cpp
@@ -13,8 +14,8 @@ set(SOURCES
     themes/Theme.cpp
     styles/StyleManager.cpp
     logging/VoltLogger.cpp
-    )
-    
+)
+
 set(HEADERS
     ui/menubar/FileMenu.h
     ui/MainWindow.h
@@ -29,41 +30,41 @@ set(HEADERS
     themes/Theme.h
     styles/StyleManager.h
     logging/VoltLogger.h
-    )
+)
 
-# Resource files
 qt_add_resources(RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources/app.qrc)
 
-# Find Qt installation
-set(Qt6_DIR "C:/Qt/6.9.0/mingw_64/lib/cmake/Qt6")
-
-# Find QScintilla
-set(QSCINTILLA_ROOT "C:/Qt/6.9.0/mingw_64")  # Adjust this path to where QScintilla was installed
-find_library(QSCINTILLA_LIBRARY
-    NAMES qscintilla2_qt6 qscintilla2_qt6d
-    PATHS ${QSCINTILLA_ROOT}/lib
-)
+#find QScintilla include directory
 find_path(QSCINTILLA_INCLUDE_DIR
     NAMES Qsci/qsciscintilla.h
-    PATHS ${QSCINTILLA_ROOT}/include
+    PATHS
+        /usr/include/qt6
+        /usr/local/include/qt6
+        /usr/include/x86_64-linux-gnu/qt6
+        /usr/include/qscintilla2
+        /usr/local/include/qscintilla2
+        ${Qt6_DIR}/../../../include
+        ${Qt6_DIR}/../../../include/qscintilla2
+    PATH_SUFFIXES
+        qscintilla2
+        Qsci
 )
 
-if(NOT QSCINTILLA_LIBRARY OR NOT QSCINTILLA_INCLUDE_DIR)
-    message(FATAL_ERROR "QScintilla library not found!")
+if(NOT QSCINTILLA_INCLUDE_DIR)
+    message(FATAL_ERROR "QScintilla headers not found! Please install libqscintilla2-qt6-dev or equivalent package")
 endif()
 
-# Add Qt MOC and UIC
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
+message(STATUS "Found QScintilla headers: ${QSCINTILLA_INCLUDE_DIR}")
 
-# Create executable
+
+#create the executable
 add_executable(${PROJECT_NAME}
     ${SOURCES}
     ${HEADERS}
     ${RESOURCES}
 )
 
-# Copy theme files to build directory
+#copy theme files to the build directory after the project is built
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/themes/themes"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -71,22 +72,22 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         "${CMAKE_BINARY_DIR}/themes/themes"
 )
 
-# Add include directories for the main executable
+#link the necessary Qt and QScintilla libraries to the executable
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Qt::Core
+    Qt::Gui
+    Qt::Widgets
+    Qt::Svg
+    ${QSCINTILLA_LIBRARY}
+)
+
+#set include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${QSCINTILLA_INCLUDE_DIR}
 )
 
-# Link Qt libraries and QScintilla
-target_link_libraries(${PROJECT_NAME} PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-    Qt6::Svg
-    ${QSCINTILLA_LIBRARY}
-)
-
-# Set executable properties
+#set properties for the executable handling different OSes
 set_target_properties(${PROJECT_NAME} PROPERTIES
     WIN32_EXECUTABLE ON
     MACOSX_BUNDLE ON
