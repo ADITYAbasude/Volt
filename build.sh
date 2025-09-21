@@ -73,37 +73,58 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "== Copying Qt DLLs =="
-# Copy required Qt DLLs to the executable directory (only if QT_DIR is set)
+# Copy required Qt DLLs directly from Qt installation (not from project dll folder)
 if [ -n "$QT_DIR" ] && [ -d "$QT_DIR" ]; then
-    echo "Copying DLLs from QT_DIR: $QT_DIR"
-    DLL_DIR="dll"  
+    echo "Copying DLLs directly from Qt installation: $QT_DIR"
     TARGET_DIR="."
     
-    mkdir -p "../$DLL_DIR"
-    cp -f "$QT_DIR/bin/Qt6Core.dll" "../$DLL_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Core.dll"
-    cp -f "$QT_DIR/bin/Qt6Gui.dll" "../$DLL_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Gui.dll"
-    cp -f "$QT_DIR/bin/Qt6Widgets.dll" "../$DLL_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Widgets.dll"
-    cp -f "$QT_DIR/plugins/platforms/qwindows.dll" "../$DLL_DIR/" 2>/dev/null || echo "Warning: Could not copy qwindows.dll"
-
-    # Then copy from our dll directory to the build directory
-    echo "Copying DLLs to build directory..."
-    cp -f "../$DLL_DIR/Qt6Core.dll" "$TARGET_DIR/" 2>/dev/null || true
-    cp -f "../$DLL_DIR/Qt6Gui.dll" "$TARGET_DIR/" 2>/dev/null || true
-    cp -f "../$DLL_DIR/Qt6Widgets.dll" "$TARGET_DIR/" 2>/dev/null || true
-    cp -f "../$DLL_DIR/Qt6Svg.dll" "$TARGET_DIR/" 2>/dev/null || true
+    # Copy Qt DLLs directly from Qt installation to build directory
+    echo "Copying Qt DLLs to build directory..."
+    cp -f "$QT_DIR/bin/Qt6Core.dll" "$TARGET_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Core.dll"
+    cp -f "$QT_DIR/bin/Qt6Gui.dll" "$TARGET_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Gui.dll"
+    cp -f "$QT_DIR/bin/Qt6Widgets.dll" "$TARGET_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Widgets.dll"
+    cp -f "$QT_DIR/bin/Qt6Svg.dll" "$TARGET_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Svg.dll"
     
-    # Copy qscintilla DLLs from dll directory of project root to build directory
-    cp -f "../$DLL_DIR/qscintilla2_qt6.dll" "$TARGET_DIR/" 2>/dev/null || true
+    # Copy QScintilla DLL directly from Qt installation
+    cp -f "$QT_DIR/bin/qscintilla2_qt6.dll" "$TARGET_DIR/" 2>/dev/null || echo "Warning: Could not copy qscintilla2_qt6.dll"
     
+    # Copy platform plugin directly from Qt installation
     mkdir -p "$TARGET_DIR/platforms"
-    cp -f "../$DLL_DIR/qwindows.dll" "$TARGET_DIR/platforms/" 2>/dev/null || true
+    cp -f "$QT_DIR/plugins/platforms/qwindows.dll" "$TARGET_DIR/platforms/" 2>/dev/null || echo "Warning: Could not copy qwindows.dll"
     
-    # Copy install_context_menu.reg, install.bat, and uninstall.bat
+    # Copy project files
     cp -f "../install_context_menu.reg" "$TARGET_DIR/" 2>/dev/null || true
     cp -f "../install.bat" "$TARGET_DIR/" 2>/dev/null || true
     cp -f "../uninstall.bat" "$TARGET_DIR/" 2>/dev/null || true
+    
+    echo "DLLs copied directly from Qt installation (no intermediate dll folder used)"
+elif [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH" ]; then
+    echo "Copying DLLs directly from CMAKE_PREFIX_PATH: $CMAKE_PREFIX_PATH"
+    TARGET_DIR="."
+    
+    # Copy Qt DLLs directly from CMAKE_PREFIX_PATH to build directory
+    echo "Copying Qt DLLs to build directory..."
+    cp -f "$CMAKE_PREFIX_PATH/bin/Qt6Core.dll" "$TARGET_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Core.dll"
+    cp -f "$CMAKE_PREFIX_PATH/bin/Qt6Gui.dll" "$TARGET_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Gui.dll"
+    cp -f "$CMAKE_PREFIX_PATH/bin/Qt6Widgets.dll" "$TARGET_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Widgets.dll"
+    cp -f "$CMAKE_PREFIX_PATH/bin/Qt6Svg.dll" "$TARGET_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Svg.dll"
+    
+    # Copy QScintilla DLL directly from CMAKE_PREFIX_PATH
+    cp -f "$CMAKE_PREFIX_PATH/bin/qscintilla2_qt6.dll" "$TARGET_DIR/" 2>/dev/null || echo "Warning: Could not copy qscintilla2_qt6.dll"
+    
+    # Copy platform plugin directly from CMAKE_PREFIX_PATH
+    mkdir -p "$TARGET_DIR/platforms"
+    cp -f "$CMAKE_PREFIX_PATH/plugins/platforms/qwindows.dll" "$TARGET_DIR/platforms/" 2>/dev/null || echo "Warning: Could not copy qwindows.dll"
+    
+    # Copy project files
+    cp -f "../install_context_menu.reg" "$TARGET_DIR/" 2>/dev/null || true
+    cp -f "../install.bat" "$TARGET_DIR/" 2>/dev/null || true
+    cp -f "../uninstall.bat" "$TARGET_DIR/" 2>/dev/null || true
+    
+    echo "DLLs copied directly from CMAKE_PREFIX_PATH (no intermediate dll folder used)"
 else
-    echo "QT_DIR not set, skipping DLL copy. Set QT_DIR environment variable if you need Qt DLLs copied."
+    echo "Neither QT_DIR nor CMAKE_PREFIX_PATH set, skipping DLL copy."
+    echo "Set QT_DIR or CMAKE_PREFIX_PATH environment variable if you need Qt DLLs copied for local testing."
 fi
 
 echo "== Running Volt =="

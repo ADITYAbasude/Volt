@@ -55,3 +55,6 @@ local
 release/dll/
 release/
 build/
+volt-package/
+*.zip
+package.sh

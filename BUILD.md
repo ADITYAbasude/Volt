@@ -1,8 +1,33 @@
-# Build Instructions for Volt
 
-Volt is a Qt6 C++ desktop application that requires Qt6 and QScintilla to build.
+# Build (short)
 
-## Prerequisites
+Prerequisites
+- Qt 6 (installed via the online installer or package manager). Ensure the Qt installation matches your compiler (MinGW vs MSVC).
+- CMake 3.16+ and a matching MinGW toolchain on Windows.
+- QScintilla for Qt6 installed in your Qt prefix, or pass -DQSCINTILLA_ROOT to CMake.
+
+Quick Windows (where Qt is at C:/Qt/6.9.0/mingw_64)
+```bash
+rm -rf build
+mkdir build && cd build
+cmake -G "MinGW Makefiles" -DCMAKE_PREFIX_PATH="C:/Qt/6.9.0/mingw_64" ..
+cmake --build . -- -j 4
+```
+
+If you installed QScintilla into your Qt prefix (include/Qsci, lib, bin), CMake will find it automatically. Otherwise set:
+```bash
+-DQSCINTILLA_ROOT=/path/to/qscintilla
+``` 
+
+Notes
+- Prefer setting CMAKE_PREFIX_PATH to your Qt installation instead of hardcoding paths in scripts.
+- If you see linker errors referencing `__imp___argc` or similar, ensure you're using the same MinGW compiler that your Qt was built with (set CMAKE_C_COMPILER/CMAKE_CXX_COMPILER or prepend Qt's mingw/bin to PATH).
+- Runtime DLLs are not committed; use the `QT_DIR` env var in `build.sh` to copy DLLs to `build/` for running locally.
+
+Troubleshooting
+- "QScintilla headers not found": install QScintilla into the Qt prefix or pass -DQSCINTILLA_ROOT.
+- "Qt not found": set CMAKE_PREFIX_PATH to your Qt installation.
+
 
 ### Linux (Ubuntu/Debian)
 ```bash
