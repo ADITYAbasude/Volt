@@ -39,17 +39,33 @@ cd vcpkg
 set CMAKE_PREFIX_PATH=C:\path\to\vcpkg\installed\x64-windows
 ```
 
-#### Option 2: Qt Installer
+#### Option 2: Qt Installer + Manual QScintilla Install
 1. Download and install Qt from [qt.io](https://www.qt.io/download)
 2. Install Qt 6.5+ with MinGW compiler
-3. Install QScintilla:
+3. Install QScintilla globally:
+
+   **Method A: Build and install QScintilla**
    ```bash
    # Download QScintilla source from: https://www.riverbankcomputing.com/software/qscintilla/download
    # Extract and build with Qt's qmake:
    cd QScintilla_src-X.X.X/src
    qmake qscintilla.pro
    mingw32-make
-   mingw32-make install
+   mingw32-make install  # Installs to Qt prefix automatically
+   ```
+
+   **Method B: Manual install from existing build**
+   ```bash
+   # If you have a pre-built QScintilla (like in dev/ folder):
+   # Copy headers to Qt include directory
+   mkdir -p "C:/Qt/6.9.0/mingw_64/include/Qsci"
+   cp -r path/to/QScintilla/src/Qsci/* "C:/Qt/6.9.0/mingw_64/include/Qsci/"
+   
+   # Copy library to Qt lib directory
+   cp path/to/QScintilla/release/libqscintilla2_qt6.a "C:/Qt/6.9.0/mingw_64/lib/"
+   
+   # Copy runtime DLL to Qt bin directory
+   cp path/to/QScintilla/release/qscintilla2_qt6.dll "C:/Qt/6.9.0/mingw_64/bin/"
    ```
 
 ### macOS
