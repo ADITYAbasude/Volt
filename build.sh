@@ -7,20 +7,55 @@ cd build
 
 echo "== Configuring CMake (if needed) =="
 
-# Use CMAKE_PREFIX_PATH if set, otherwise let CMake find Qt automatically
 if [ -n "$CMAKE_PREFIX_PATH" ]; then
     echo "Using CMAKE_PREFIX_PATH: $CMAKE_PREFIX_PATH"
 else
     echo "CMAKE_PREFIX_PATH not set, relying on system Qt installation"
 fi
 
-# Use compilers from CMAKE_C_COMPILER/CMAKE_CXX_COMPILER if set
 CMAKE_ARGS=""
-if [ -n "$CMAKE_C_COMPILER" ]; then
-    CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_C_COMPILER=$CMAKE_C_COMPILER"
-fi
+
 if [ -n "$CMAKE_CXX_COMPILER" ]; then
     CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER"
+    echo "Using explicit CMAKE_CXX_COMPILER: $CMAKE_CXX_COMPILER"
+else
+    QT_CXX=""
+    shopt -s nullglob 2>/dev/null || true
+
+    candidates=()
+    if [ -n "$CMAKE_PREFIX_PATH" ]; then
+        candidates+=("$CMAKE_PREFIX_PATH/bin/g++.exe")
+        candidates+=("$CMAKE_PREFIX_PATH/../Tools/*/bin/g++.exe")
+        candidates+=("$CMAKE_PREFIX_PATH/../../Tools/*/bin/g++.exe")
+    fi
+    # common Qt Tools and installation layouts
+    candidates+=("/c/Qt/Tools/*/bin/g++.exe")
+    candidates+=("/c/Qt/*/mingw_*/bin/g++.exe")
+    candidates+=("/c/Qt/*/Tools/*/bin/g++.exe")
+
+    for pat in "${candidates[@]}"; do
+        for match in $pat; do
+            if [ -x "$match" ]; then
+                QT_CXX="$match"
+                break 2
+            fi
+        done
+    done
+
+    if [ -z "$QT_CXX" ]; then
+        WHICH_GPP=$(which g++ 2>/dev/null || true)
+        if [ -n "$WHICH_GPP" ]; then
+            QT_CXX="$WHICH_GPP"
+        fi
+    fi
+
+    if [ -n "$QT_CXX" ]; then
+        CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_CXX_COMPILER=$QT_CXX"
+        echo "Auto-detected C++ compiler: $QT_CXX"
+    else
+        echo "No compiler auto-detected; CMake will pick the system compiler (may cause ABI mismatch)"
+    fi
+    shopt -u nullglob 2>/dev/null || true
 fi
 
 cmake -G "MinGW Makefiles" $CMAKE_ARGS ..
@@ -41,10 +76,9 @@ echo "== Copying Qt DLLs =="
 # Copy required Qt DLLs to the executable directory (only if QT_DIR is set)
 if [ -n "$QT_DIR" ] && [ -d "$QT_DIR" ]; then
     echo "Copying DLLs from QT_DIR: $QT_DIR"
-    DLL_DIR="dll"  # Store DLLs in a central location
-    TARGET_DIR="."  # Root of build directory where Volt.exe is
+    DLL_DIR="dll"  
+    TARGET_DIR="."
     
-    # First, ensure we have the DLLs in our dll directory
     mkdir -p "../$DLL_DIR"
     cp -f "$QT_DIR/bin/Qt6Core.dll" "../$DLL_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Core.dll"
     cp -f "$QT_DIR/bin/Qt6Gui.dll" "../$DLL_DIR/" 2>/dev/null || echo "Warning: Could not copy Qt6Gui.dll"
@@ -61,7 +95,6 @@ if [ -n "$QT_DIR" ] && [ -d "$QT_DIR" ]; then
     # Copy qscintilla DLLs from dll directory of project root to build directory
     cp -f "../$DLL_DIR/qscintilla2_qt6.dll" "$TARGET_DIR/" 2>/dev/null || true
     
-    # Create platforms directory and copy platform plugin
     mkdir -p "$TARGET_DIR/platforms"
     cp -f "../$DLL_DIR/qwindows.dll" "$TARGET_DIR/platforms/" 2>/dev/null || true
     

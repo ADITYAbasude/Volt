@@ -1,4 +1,4 @@
-#define source files and header files
+
 set(SOURCES
     main.cpp
     ui/menubar/FileMenu.cpp
@@ -34,11 +34,6 @@ set(HEADERS
 
 qt_add_resources(RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources/app.qrc)
 
-# Cross-platform QScintilla detection using standard CMake mechanisms
-# Relies on CMAKE_PREFIX_PATH and system package managers
-# Use -DQSCINTILLA_ROOT=<path> to override if needed
-
-# Allow overriding with -DQSCINTILLA_ROOT=path for local builds
 if(DEFINED QSCINTILLA_ROOT)
     message(STATUS "Using QSCINTILLA_ROOT override: ${QSCINTILLA_ROOT}")
     set(_qsc_hints ${QSCINTILLA_ROOT})
@@ -46,7 +41,6 @@ else()
     set(_qsc_hints "")
 endif()
 
-# Find QScintilla headers
 find_path(QSCINTILLA_INCLUDE_DIR
     NAMES Qsci/qsciscintilla.h
     HINTS ${_qsc_hints}
@@ -86,7 +80,6 @@ else()
     message(STATUS "Found QScintilla library: ${QSCINTILLA_LIBRARY}")
 endif()
 
-#create the executable
 add_executable(${PROJECT_NAME}
     ${SOURCES}
     ${HEADERS}
@@ -101,7 +94,6 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         "${CMAKE_BINARY_DIR}/themes/themes"
 )
 
-#link the necessary Qt and QScintila libraries to the executable
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
     Qt6::Gui
@@ -110,13 +102,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${QSCINTILLA_LIBRARY}
 )
 
-#set include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${QSCINTILLA_INCLUDE_DIR}
 )
 
-#set properties for the executable handling different OSes
 set_target_properties(${PROJECT_NAME} PROPERTIES
     WIN32_EXECUTABLE ON
     MACOSX_BUNDLE ON
