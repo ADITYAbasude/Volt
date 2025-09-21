@@ -34,6 +34,8 @@ set(HEADERS
 
 qt_add_resources(RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources/app.qrc)
 
+# Cross-platform QScintilla detection
+# Allow overriding with -DQSCINTILLA_ROOT=path
 if(DEFINED QSCINTILLA_ROOT)
     set(_qsc_root "${QSCINTILLA_ROOT}")
 else()
@@ -45,11 +47,14 @@ if(WIN32)
         set(_qsc_root "${CMAKE_SOURCE_DIR}/dev/QScintilla/QScintilla_src-2.14.1/release")
     endif()
 
+    # Build a list of hint prefixes: explicit override, Qt install parent(s), and any prefixes in CMAKE_PREFIX_PATH
     set(_qsc_hints)
     if(_qsc_root)
         list(APPEND _qsc_hints ${_qsc_root})
     endif()
     if(DEFINED Qt6_DIR)
+        # Qt6_DIR usually points into <prefix>/lib/cmake/Qt6
+        # prefer the prefix (../../..)
         list(APPEND _qsc_hints ${Qt6_DIR}/../../../)
     endif()
     if(DEFINED CMAKE_PREFIX_PATH)
@@ -97,17 +102,16 @@ else()
 endif()
 
 if(NOT QSCINTILLA_INCLUDE_DIR)
-    message(FATAL_ERROR "QScintilla headers not found! Please install libqscintilla2-qt6-dev")
+    message(FATAL_ERROR "QScintilla headers not found! Please install libqscintilla2-qt6-dev or set -DQSCINTILLA_ROOT=<path-to-qscintilla>")
 else()
     message(STATUS "Found QScintilla headers: ${QSCINTILLA_INCLUDE_DIR}")
 endif()
 
 if(NOT QSCINTILLA_LIBRARY)
-    message(WARNING "QScintilla library not foundm build may fail to link.")
+    message(WARNING "QScintilla library not found; build may fail to link. You can set -DQSCINTILLA_ROOT=<path> or -DQSCINTILLA_LIBRARY=<libpath>")
 else()
     message(STATUS "Found QScintilla library: ${QSCINTILLA_LIBRARY}")
 endif()
-
 
 #create the executable
 add_executable(${PROJECT_NAME}
@@ -124,12 +128,12 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         "${CMAKE_BINARY_DIR}/themes/themes"
 )
 
-#link the necessary Qt and QScintilla libraries to the executable
+#link the necessary Qt and QScintila libraries to the executable
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    Qt::Core
-    Qt::Gui
-    Qt::Widgets
-    Qt::Svg
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::Svg
     ${QSCINTILLA_LIBRARY}
 )
 

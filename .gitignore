@@ -52,4 +52,6 @@ local
 .github/*.md
 
 #release
+release/dll/
 release/
+build/
