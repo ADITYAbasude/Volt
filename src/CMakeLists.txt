@@ -34,81 +34,54 @@ set(HEADERS
 
 qt_add_resources(RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources/app.qrc)
 
-# Cross-platform QScintilla detection
-# Allow overriding with -DQSCINTILLA_ROOT=path
+# Cross-platform QScintilla detection using standard CMake mechanisms
+# Relies on CMAKE_PREFIX_PATH and system package managers
+# Use -DQSCINTILLA_ROOT=<path> to override if needed
+
+# Allow overriding with -DQSCINTILLA_ROOT=path for local builds
 if(DEFINED QSCINTILLA_ROOT)
-    set(_qsc_root "${QSCINTILLA_ROOT}")
+    message(STATUS "Using QSCINTILLA_ROOT override: ${QSCINTILLA_ROOT}")
+    set(_qsc_hints ${QSCINTILLA_ROOT})
 else()
-    set(_qsc_root "")
+    set(_qsc_hints "")
 endif()
 
-if(WIN32)
-    if(NOT _qsc_root AND EXISTS "${CMAKE_SOURCE_DIR}/dev/QScintilla/QScintilla_src-2.14.1/release")
-        set(_qsc_root "${CMAKE_SOURCE_DIR}/dev/QScintilla/QScintilla_src-2.14.1/release")
-    endif()
+# Find QScintilla headers
+find_path(QSCINTILLA_INCLUDE_DIR
+    NAMES Qsci/qsciscintilla.h
+    HINTS ${_qsc_hints}
+    PATH_SUFFIXES include qscintilla2 Qsci
+    DOC "QScintilla include directory"
+)
 
-    # Build a list of hint prefixes: explicit override, Qt install parent(s), and any prefixes in CMAKE_PREFIX_PATH
-    set(_qsc_hints)
-    if(_qsc_root)
-        list(APPEND _qsc_hints ${_qsc_root})
-    endif()
-    if(DEFINED Qt6_DIR)
-        # Qt6_DIR usually points into <prefix>/lib/cmake/Qt6
-        # prefer the prefix (../../..)
-        list(APPEND _qsc_hints ${Qt6_DIR}/../../../)
-    endif()
-    if(DEFINED CMAKE_PREFIX_PATH)
-        list(APPEND _qsc_hints ${CMAKE_PREFIX_PATH})
-    endif()
-
-    find_path(QSCINTILLA_INCLUDE_DIR
-        NAMES Qsci/qsciscintilla.h
-        HINTS ${_qsc_hints}
-        PATHS ${_qsc_root}/include ${_qsc_root}/src
-        PATH_SUFFIXES qscintilla2 Qsci
-    )
-
-    find_library(QSCINTILLA_LIBRARY
-        NAMES qscintilla2_qt6 qscintilla2_qt6d libqscintilla2_qt6
-        HINTS ${_qsc_hints}
-        PATHS ${_qsc_root}/lib ${Qt6_DIR}/../../../lib
-        PATH_SUFFIXES lib
-    )
-
-else()
-    find_path(QSCINTILLA_INCLUDE_DIR
-        NAMES Qsci/qsciscintilla.h
-        PATHS
-            ${_qsc_root}/include
-            /usr/include/qt6
-            /usr/local/include/qt6
-            /usr/include/x86_64-linux-gnu/qt6
-            /usr/include/qscintilla2
-            /usr/local/include/qscintilla2
-            ${Qt6_DIR}/../../../include
-        PATH_SUFFIXES
-            qscintilla2
-            Qsci
-    )
-
-    find_library(QSCINTILLA_LIBRARY
-        NAMES qscintilla2_qt6 qscintilla2_qt6d
-        PATHS
-            ${_qsc_root}/lib
-            /usr/lib
-            /usr/local/lib
-            ${Qt6_DIR}/../../../lib
-    )
-endif()
+# Find QScintilla library
+find_library(QSCINTILLA_LIBRARY
+    NAMES qscintilla2_qt6 qscintilla2_qt6d libqscintilla2_qt6
+    HINTS ${_qsc_hints}
+    PATH_SUFFIXES lib
+    DOC "QScintilla library"
+)
 
 if(NOT QSCINTILLA_INCLUDE_DIR)
-    message(FATAL_ERROR "QScintilla headers not found! Please install libqscintilla2-qt6-dev or set -DQSCINTILLA_ROOT=<path-to-qscintilla>")
+    message(FATAL_ERROR 
+        "QScintilla headers not found!\n"
+        "Please install QScintilla development package:\n"
+        "  Linux: sudo apt install libqscintilla2-qt6-dev\n"
+        "  Windows: Install via package manager or set CMAKE_PREFIX_PATH\n"
+        "  Or use: -DQSCINTILLA_ROOT=<path-to-qscintilla-install>"
+    )
 else()
     message(STATUS "Found QScintilla headers: ${QSCINTILLA_INCLUDE_DIR}")
 endif()
 
 if(NOT QSCINTILLA_LIBRARY)
-    message(WARNING "QScintilla library not found; build may fail to link. You can set -DQSCINTILLA_ROOT=<path> or -DQSCINTILLA_LIBRARY=<libpath>")
+    message(FATAL_ERROR 
+        "QScintilla library not found!\n"
+        "Please install QScintilla:\n"
+        "  Linux: sudo apt install libqscintilla2-qt6-dev\n"
+        "  Windows: Install via package manager or set CMAKE_PREFIX_PATH\n"
+        "  Or use: -DQSCINTILLA_LIBRARY=<path-to-library>"
+    )
 else()
     message(STATUS "Found QScintilla library: ${QSCINTILLA_LIBRARY}")
 endif()
