@@ -173,8 +173,6 @@ void Sidebar::createExplorerTab()
     connect(m_collapseButton, &QPushButton::clicked, this, &Sidebar::collapseAll);
     connect(m_createFileButton, &QPushButton::clicked, this, &Sidebar::createNewFile);
 
-    // Add to tab widget
-    // Create high-DPI pixmap for crisp icons
     QPixmap folderIcon(QSize(24, 24) * devicePixelRatio);
     folderIcon.setDevicePixelRatio(devicePixelRatio);
     folderIcon.fill(Qt::transparent);
@@ -193,8 +191,6 @@ void Sidebar::createExplorerTab()
         QChar folderChar = Theme::instance().getCarbonIconChar("symbol-folder");
         if (!folderChar.isNull())
         {
-            VOLT_DEBUG_F("Using Carbon icon for folder: U+%1 char: %2", QString::number(folderChar.unicode(), 16).rightJustified(4, '0').toUpper().append(" ").append(folderChar));
-            // Use proper bounding rectangle for centering
             QRect iconRect = folderIcon.rect();
             if (devicePixelRatio > 1.0) {
                 iconRect = QRect(0, 0, 24, 24);
@@ -289,7 +285,6 @@ void Sidebar::setRootPath(const QString &path)
     QDir dir(path);
     if (!dir.exists())
     {
-        VOLT_ERROR_F("Directory does not exist: %1", path);
         showWelcomeScreen();
         return;
     }
@@ -319,7 +314,8 @@ void Sidebar::showWelcomeScreen()
     m_collapseButton->setEnabled(false);
     m_createFileButton->setVisible(false);
     m_collapseButton->setVisible(false);
-    m_pathEdit->setText("No folder opened");
+    m_pathEdit->setVisible(false);
+
 }
 
 void Sidebar::showTreeView()
@@ -352,7 +348,6 @@ void Sidebar::openFolder()
 void Sidebar::collapseAll()
 {
     m_treeView->collapseAll();
-    VOLT_UI("Project Explorer: Collapsed all folders");
 }
 
 void Sidebar::onItemDoubleClicked(const QModelIndex &index)
@@ -445,7 +440,7 @@ void Sidebar::applyTheme()
     }
     
     QTabBar::tab {
-        border: 1px solid #fff;
+        border: none;
         background-color: %1;
         color: %2;
         margin: 0;
@@ -460,9 +455,8 @@ void Sidebar::applyTheme()
     }
     
     QTabBar::tab:selected {
-        background-color: %8;
         color: #FFFFFF;
-        border: none;
+        border: 1px solid #ffca2c;
     }
     
     QTabBar::tab:hover:!selected {
@@ -480,8 +474,14 @@ void Sidebar::applyTheme()
         .arg(explorerFont.family())    // %6 - font family
         .arg(explorerFont.pointSize()) // %7 - font size
         .arg(primaryColor.name());     // %8 - active selection background
+    
+        if (m_tabWidget->tabBar()){
 
-    m_tabWidget->setStyleSheet(tabStyle);
+            m_tabWidget->tabBar()->setStyleSheet(tabStyle);
+            m_tabWidget->tabBar()->setSelectionBehaviorOnRemove(QTabBar::SelectLeftTab);
+            m_tabWidget->tabBar()->setAttribute(Qt::WA_SetStyle, true);
+            m_tabWidget->tabBar()->update();
+        }
 
     this->setStyleSheet(QString(R"(
         QDockWidget {

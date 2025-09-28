@@ -24,15 +24,19 @@ void CustomTabBar::paintEvent(QPaintEvent *event)
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 
-    QStyleOptionTab opt;
 
+    QStyleOptionTab opt;
     for (int i = 0; i < count(); ++i)
     {
-        QStyleOptionTab backOpt = opt;
+        QStyleOptionTab backOpt;
+        initStyleOption(&backOpt, i);
+
         backOpt.icon = QIcon();
         backOpt.text = QString();
+        
         QRect backRect = tabRect(i);
         backOpt.rect = backRect;
+        
         style()->drawControl(QStyle::CE_TabBarTabShape, &backOpt, &painter, this);
         style()->drawControl(QStyle::CE_TabBarTabLabel, &backOpt, &painter, this);
 
@@ -41,7 +45,6 @@ void CustomTabBar::paintEvent(QPaintEvent *event)
         {
             QSize iconSize = this->iconSize();
 
-            // Get DPI value of the device to render the icon crisply
             qreal deviceRatio = devicePixelRatio();
             QPixmap pixmap = icon.pixmap(iconSize * deviceRatio);
             pixmap.setDevicePixelRatio(deviceRatio);
