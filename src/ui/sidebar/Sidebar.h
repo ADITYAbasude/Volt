@@ -14,6 +14,8 @@
 #include <QFont>
 #include "../components/IconButton.h"
 #include "../components/FilledColorButton.h"
+#include "../components/CustomTabWidget.h"
+#include "../components/CustomTabBar.h"
 
 class Sidebar : public QDockWidget
 {
@@ -52,7 +54,7 @@ private:
     void showTreeView();
 
     // UI Components
-    QTabWidget *m_tabWidget;
+    CustomTabWidget *m_tabWidget;
     QWidget *m_centralWidget;
     QVBoxLayout *m_mainLayout;
     QHBoxLayout *m_explorerTopBar;

@@ -1,9 +1,9 @@
 {
   "colors": {
-    "primary": "#007ACC",
+    "primary": "#ffca2c",
     "secondary": "#1e1e1e",
     "editor.background": "#1e1e1e",
-    "editor.foreground": "#d4d4d4",
+    "editor.foreground": "#000",
     "editor.lineNumber.background": "#1e1e1e",
     "editor.lineNumber.foreground": "#858585",
     "editor.cursor": "#fff",
@@ -23,13 +23,6 @@
     "menu.selectionBackground": "#04395e",
     "menu.selectionForeground": "#ffffff",
     "menu.border": "#454545",
-
-    "explorer.background": "#252526",
-    "explorer.foreground": "#cccccc",
-    "explorer.border": "#FFFFFF",
-    "explorer.selectionBackground": "#37373d",
-    "explorer.selectionForeground": "#ffffff",
-    "explorer.hoverBackground": "#2a2d2e",
 
     "syntax.comment": "#6a9955",
     "syntax.string": "#ce9178",

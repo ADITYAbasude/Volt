@@ -124,8 +124,8 @@ void FilledColorButton::loadThemeColors()
     
     switch (m_buttonStyle) {
         case Primary:
-            m_backgroundColor = theme.getColor("primary", QColor("#007ACC"));
-            m_textColor = theme.getColor("button.primary.foreground", QColor("#FFFFFF"));
+            m_backgroundColor = theme.getColor("primary");
+            m_textColor = theme.getColor("button.primary.foreground");
             m_hoverColor = theme.getColor("button.primary.hoverBackground", m_backgroundColor.lighter(110));
             m_pressedColor = theme.getColor("button.primary.pressedBackground", m_backgroundColor.darker(110));
             break;

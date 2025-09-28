@@ -88,10 +88,3 @@ If you prefer to build manually:
    - Ensure Qt is properly installed and the PATH environment variable includes the Qt and MinGW binary directories
    - Make sure CMake can find Qt by setting CMAKE_PREFIX_PATH correctly in CMakeLists.txt
 
-## Additional Notes
-
-- The application currently displays a simple window with styled "Hello World" text
-- Window properties (size, color, font) can be modified in `src/main.cpp`
-- The application uses Qt's Widgets module for the GUI
-
-

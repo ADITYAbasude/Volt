@@ -14,8 +14,10 @@ set(SOURCES
     themes/Theme.cpp
     styles/StyleManager.cpp
     logging/VoltLogger.cpp
-)
-
+    ui/components/CustomTabBar.cpp
+    ui/components/CustomTabWidget.cpp
+    )
+    
 set(HEADERS
     ui/menubar/FileMenu.h
     ui/MainWindow.h
@@ -30,6 +32,8 @@ set(HEADERS
     themes/Theme.h
     styles/StyleManager.h
     logging/VoltLogger.h
+    ui/components/CustomTabBar.h
+    ui/components/CustomTabWidget.h
 )
 
 qt_add_resources(RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources/app.qrc)
