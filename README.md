@@ -7,10 +7,12 @@ A simple Qt-based application demonstrating basic window creation and styling.
 Before you can build and run this application, you need to have the following installed:
 
 1. **Qt 6.9.0** or later
+
    - Download from [Qt's official website](https://www.qt.io/download)
    - Make sure to install the MinGW 64-bit compiler during Qt installation
 
 2. **CMake** (3.16 or higher)
+
    - Can be installed with Qt or separately from [CMake's website](https://cmake.org/download/)
 
 3. **MinGW-w64**
@@ -18,73 +20,27 @@ Before you can build and run this application, you need to have the following in
 
 ## Building the Application
 
-### Using the Build Script
+## Windows first-time build note
 
-1. Open a terminal in the project root directory
-2. Run the build script:
-   ```bash
-   ./build.sh
-   ```
-   This will:
-   - Create a build directory
-   - Configure CMake
-   - Build the project
-   - Copy necessary Qt DLLs
-   - Run the application
+If you're building on Windows for the first time (or using a Qt installation that CMake can't auto-detect), set the `CMAKE_PREFIX_PATH` environment variable to your Qt installation root before running the build script. Example (Git Bash / MSYS):
 
-### Manual Build
+```bash
+export CMAKE_PREFIX_PATH="/c/Qt/6.9.0/mingw_64"
+./build.sh
+```
 
-If you prefer to build manually:
+This ensures CMake and the build script find Qt and QScintilla headers/libraries. If you still see a CMake error like:
 
-1. Create and enter the build directory:
-   ```bash
-   mkdir build
-   cd build
-   ```
+```
+QScintilla headers not found!
+```
 
-2. Configure CMake:
-   ```bash
-   cmake -G "MinGW Makefiles" ..
-   ```
-
-3. Build the project:
-   ```bash
-   cmake --build .
-   ```
-
-4. Copy required Qt DLLs to the executable directory:
-   ```bash
-   cp /c/Qt/6.9.0/mingw_64/bin/Qt6Core.dll src/
-   cp /c/Qt/6.9.0/mingw_64/bin/Qt6Gui.dll src/
-   cp /c/Qt/6.9.0/mingw_64/bin/Qt6Widgets.dll src/
-   mkdir -p src/platforms
-   cp /c/Qt/6.9.0/mingw_64/plugins/platforms/qwindows.dll src/platforms/
-   ```
-
-5. Run the application:
-   ```bash
-   cd src
-   ./Volt.exe
-   ```
+then either QScintilla isn't installed for your Qt toolchain or CMake is pointed at a different Qt than QScintilla was built for.
 
 ## Project Structure
 
 - `src/main.cpp` - Main application code
 - `src/CMakeLists.txt` - CMake configuration for source files
 - `CMakeLists.txt` - Root CMake configuration
-- `build.sh` - Build automation script
-
-## Troubleshooting
-
-1. **Missing DLL Errors**
-   - If you see errors about missing DLLs, make sure all required Qt DLLs are copied to the same directory as the executable
-   - Required DLLs:
-     - Qt6Core.dll
-     - Qt6Gui.dll
-     - Qt6Widgets.dll
-     - platforms/qwindows.dll
-
-2. **Build Errors**
-   - Ensure Qt is properly installed and the PATH environment variable includes the Qt and MinGW binary directories
-   - Make sure CMake can find Qt by setting CMAKE_PREFIX_PATH correctly in CMakeLists.txt
-
+- `build.sh` - Build automation script for windows
+- `linux_build.sh` - Build automation script for Linux

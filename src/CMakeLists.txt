@@ -6,6 +6,7 @@ set(SOURCES
     ui/statusbar/StatusBar.cpp
     ui/sidebar/Sidebar.cpp
     ui/sidebar/CustomTreeView.cpp
+    ui/sidebar/FileIconProvider.cpp
     ui/components/IconButton.cpp
     ui/components/FilledColorButton.cpp
     ui/utils/IconUtils.cpp
@@ -13,6 +14,7 @@ set(SOURCES
     editor/Minimap.cpp
     themes/Theme.cpp
     styles/StyleManager.cpp
+    styles/StyleHelper.cpp
     logging/VoltLogger.cpp
     ui/components/CustomTabBar.cpp
     ui/components/CustomTabWidget.cpp
@@ -24,6 +26,7 @@ set(HEADERS
     ui/statusbar/StatusBar.h
     ui/sidebar/Sidebar.h
     ui/sidebar/CustomTreeView.h
+    ui/sidebar/FileIconProvider.h
     ui/components/IconButton.h
     ui/components/FilledColorButton.h
     ui/utils/IconUtils.h
@@ -31,6 +34,7 @@ set(HEADERS
     editor/Minimap.h
     themes/Theme.h
     styles/StyleManager.h
+    styles/StyleHelper.h
     logging/VoltLogger.h
     ui/components/CustomTabBar.h
     ui/components/CustomTabWidget.h

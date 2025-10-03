@@ -1,6 +1,8 @@
 #include "Sidebar.h"
 #include "CustomTreeView.h"
+#include "FileIconProvider.h"
 #include "../../themes/Theme.h"
+#include "../../styles/StyleHelper.h"
 #include "../../logging/VoltLogger.h"
 #include "../utils/IconUtils.h"
 #include "../components/CustomTabBar.h"
@@ -33,13 +35,12 @@ Sidebar::Sidebar(QWidget *parent)
       m_explorerWidget(nullptr),
       m_treeView(new CustomTreeView(this)),
       m_fileSystemModel(nullptr),
+      m_fileIconProvider(new FileIconProvider()),
       m_welcomeWidget(nullptr),
       m_welcomeLabel(nullptr),
       m_welcomeOpenFolderButton(nullptr),
       m_searchWidget(nullptr),
-      m_sourceControlWidget(nullptr),
       m_searchLabel(nullptr),
-      m_sourceControlLabel(nullptr),
       m_explorerTopBar(nullptr),
       m_font("icons-carbon")
 {
@@ -63,24 +64,19 @@ void Sidebar::setupUI()
     m_tabWidget->setTabShape(QTabWidget::Rounded);
     m_tabWidget->setIconSize(QSize(20, 24));
     m_tabWidget->setLayoutDirection(Qt::LeftToRight);
-    
+    m_tabWidget->setElideMode(Qt::ElideRight);
+    m_tabWidget->tabBar()->setExpanding(false);
+
     QTabBar *customBar = new CustomTabBar(m_tabWidget);
     m_tabWidget->setCustomTabBar(customBar);
     setWidget(m_tabWidget);
-    
-    // Ensure tabs are aligned left, not centered
-    if (m_tabWidget->tabBar())
-    {
-        m_tabWidget->tabBar()->setLayoutDirection(Qt::LeftToRight);
-        m_tabWidget->tabBar()->setExpanding(false);
-    }
 }
 
 void Sidebar::setupTabs()
 {
     createExplorerTab();
     createSearchTab();
-
+    createSourceControlTab();
     VOLT_UI("Project Explorer tabs setup completed");
 }
 
@@ -105,7 +101,7 @@ void Sidebar::createExplorerTab()
         painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 
         QFont carbonFont = m_font;
-        carbonFont.setPixelSize(18); 
+        carbonFont.setPixelSize(18);
         carbonFont.setHintingPreference(QFont::PreferNoHinting);
 
         painter.setFont(carbonFont);
@@ -116,7 +112,8 @@ void Sidebar::createExplorerTab()
         {
             VOLT_DEBUG_F("Using Carbon icon for new file: U+%1 char: %2", QString::number(newFileChar.unicode(), 16).rightJustified(4, '0').toUpper().append(" ").append(newFileChar));
             QRect iconRect = newFileIcon.rect();
-            if (devicePixelRatio > 1.0) {
+            if (devicePixelRatio > 1.0)
+            {
                 iconRect = QRect(0, 0, 24, 24);
             }
             painter.drawText(iconRect, Qt::AlignCenter | Qt::AlignVCenter, newFileChar);
@@ -124,7 +121,7 @@ void Sidebar::createExplorerTab()
     }
     m_createFileButton = new IconButton("Create New File", this);
     m_collapseButton = new IconButton(":/icons/collapse_all.svg", "Collapse All", this);
-    
+
     m_pathEdit = new QLabel("No folder opened", this);
     m_pathEdit->setWordWrap(true);
     m_pathEdit->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
@@ -183,7 +180,7 @@ void Sidebar::createExplorerTab()
         painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 
         QFont carbonFont = m_font;
-        carbonFont.setPixelSize(18); 
+        carbonFont.setPixelSize(18);
         carbonFont.setHintingPreference(QFont::PreferNoHinting);
         painter.setFont(carbonFont);
         painter.setPen(QColor("#CCCCCC"));
@@ -192,7 +189,8 @@ void Sidebar::createExplorerTab()
         if (!folderChar.isNull())
         {
             QRect iconRect = folderIcon.rect();
-            if (devicePixelRatio > 1.0) {
+            if (devicePixelRatio > 1.0)
+            {
                 iconRect = QRect(0, 0, 24, 24);
             }
             painter.drawText(iconRect, Qt::AlignCenter | Qt::AlignVCenter, folderChar);
@@ -230,7 +228,7 @@ void Sidebar::createSearchTab()
     painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
 
     QFont carbonFont = m_font;
-    carbonFont.setPixelSize(18); 
+    carbonFont.setPixelSize(18);
     carbonFont.setHintingPreference(QFont::PreferNoHinting);
     painter.setFont(carbonFont);
     painter.setPen(QColor("#CCCCCC"));
@@ -241,7 +239,8 @@ void Sidebar::createSearchTab()
         VOLT_DEBUG_F("Using Carbon icon for search: U+%1 char: %2", QString::number(searchChar.unicode(), 16).rightJustified(4, '0').toUpper().append(" ").append(searchChar));
         // Use proper bounding rectangle for centering
         QRect iconRect = searchIcon.rect();
-        if (devicePixelRatio > 1.0) {
+        if (devicePixelRatio > 1.0)
+        {
             iconRect = QRect(0, 0, 24, 24);
         }
         painter.drawText(iconRect, Qt::AlignCenter | Qt::AlignVCenter, searchChar);
@@ -252,10 +251,57 @@ void Sidebar::createSearchTab()
     m_tabWidget->setTabToolTip(1, "Search");
 }
 
+void Sidebar::createSourceControlTab()
+{
+    QWidget *sourceControlWidget = new QWidget();
+    QVBoxLayout *sourceControlLayout = new QVBoxLayout(sourceControlWidget);
+
+    QLabel *sourceControlLabel = new QLabel("Source Control functionality coming soon...", sourceControlWidget);
+    sourceControlLabel->setAlignment(Qt::AlignCenter);
+    sourceControlLabel->setWordWrap(true);
+
+    sourceControlLayout->addStretch();
+    sourceControlLayout->addWidget(sourceControlLabel);
+    sourceControlLayout->addStretch();
+
+    qreal devicePixelRatio = this->devicePixelRatio();
+    QPixmap sourceControlIcon(QSize(24, 24) * devicePixelRatio);
+    sourceControlIcon.setDevicePixelRatio(devicePixelRatio);
+    sourceControlIcon.fill(Qt::transparent);
+    QPainter painter(&sourceControlIcon);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setRenderHint(QPainter::TextAntialiasing, true);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+
+    QFont carbonFont = m_font;
+    carbonFont.setPixelSize(18);
+    carbonFont.setHintingPreference(QFont::PreferNoHinting);
+    painter.setFont(carbonFont);
+    painter.setPen(QColor("#CCCCCC"));
+
+    QChar sourceControlChar = Theme::instance().getCarbonIconChar("source-control");
+    if (!sourceControlChar.isNull())
+    {
+        
+        QRect iconRect = sourceControlIcon.rect();
+        if (devicePixelRatio > 1.0)
+        {
+            iconRect = QRect(0, 0, 24, 24);
+        }
+        painter.drawText(iconRect, Qt::AlignCenter | Qt::AlignVCenter, sourceControlChar);
+    }
+
+    m_tabWidget->addTab(sourceControlWidget, QIcon(sourceControlIcon), "");
+    m_tabWidget->setTabToolTip(2, "Source Control");
+}
+
 void Sidebar::setupFileSystemModel()
 {
     m_fileSystemModel = new QFileSystemModel(this);
     m_fileSystemModel->setRootPath("");
+
+    // Set custom icon provider
+    m_fileSystemModel->setIconProvider(m_fileIconProvider);
 
     // Set filters to show all files and folders
     m_fileSystemModel->setFilter(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::AllDirs);
@@ -315,7 +361,6 @@ void Sidebar::showWelcomeScreen()
     m_createFileButton->setVisible(false);
     m_collapseButton->setVisible(false);
     m_pathEdit->setVisible(false);
-
 }
 
 void Sidebar::showTreeView()
@@ -398,179 +443,47 @@ void Sidebar::onSelectionChanged(const QModelIndex &current, const QModelIndex &
 void Sidebar::applyTheme()
 {
     Theme &theme = Theme::instance();
+    StyleHelper &styleHelper = StyleHelper::instance();
 
+    // Get theme colors
     QColor bgColor = theme.getColor("editor.background");
-
     QColor fgColor = theme.getColor("editor.foreground");
-
-    QColor borderColor = theme.getColor("menubar.border");
-
     QColor selectionBg = theme.getColor("explorer.selectionBackground");
-
     QColor selectionFg = theme.getColor("explorer.selectionForeground");
-
     QColor hoverBg = theme.getColor("explorer.hoverBackground");
-
-    QColor secondaryColor = theme.getColor("secondary");
-
     QColor primaryColor = theme.getColor("primary");
-
     QFont explorerFont = theme.getFont("explorer");
 
-    QFont treeFont("Segoe UI", 9);
-    m_treeView->setFont(treeFont);
+    m_treeView->setFont(QFont("Segoe UI", 9));
 
-    QString tabStyle = QString(R"(
-    QTabWidget::pane {
-        border: none;
-        background-color: %1;
-    }
-    
-    QTabWidget::tab-bar {
-        left: 0px;
-        alignment: left;
-    }
-    
-    QTabBar {
-        background-color: %1;
-        border: none;
-        qproperty-drawBase: false;
-        qproperty-expanding: false;
-        outline: none;
-    }
-    
-    QTabBar::tab {
-        border: none;
-        background-color: %1;
-        color: %2;
-        margin: 0;
-        padding: 0;
-        min-width: 32px;
-        min-height: 32px;
-        max-width: 32px;
-        max-height: 32px;
-    }
-    QTabBar::tab:not(:last) {
-        margin-right: 6px;
-    }
-    
-    QTabBar::tab:selected {
-        color: #FFFFFF;
-        border: 1px solid #ffca2c;
-    }
-    
-    QTabBar::tab:hover:!selected {
-        background-color: %5;
-    }
-    
-    QTabBar::tab:first {
-        margin-left: 2px;
-    }
-    )").arg(bgColor.name())           // %1 - background
-        .arg(fgColor.name())           // %2 - foreground
-        .arg(selectionBg.name())       // %3 - selection background (inactive)
-        .arg(selectionFg.name())       // %4 - selection foreground
-        .arg(hoverBg.name())           // %5 - hover background
-        .arg(explorerFont.family())    // %6 - font family
-        .arg(explorerFont.pointSize()) // %7 - font size
-        .arg(primaryColor.name());     // %8 - active selection background
-    
-        if (m_tabWidget->tabBar()){
+    if (m_tabWidget && m_tabWidget->tabBar())
+    {
+        m_tabWidget->tabBar()->setLayoutDirection(Qt::LeftToRight);
+        m_tabWidget->tabBar()->setExpanding(false);
 
-            m_tabWidget->tabBar()->setStyleSheet(tabStyle);
-            m_tabWidget->tabBar()->setSelectionBehaviorOnRemove(QTabBar::SelectLeftTab);
-            m_tabWidget->tabBar()->setAttribute(Qt::WA_SetStyle, true);
-            m_tabWidget->tabBar()->update();
-        }
+        m_tabWidget->setStyleSheet(styleHelper.getTabWidgetStyle(bgColor, fgColor));
+    }
 
-    this->setStyleSheet(QString(R"(
-        QDockWidget {
-            background-color: %1;
-            border: none;
-        }
-    )")
-                            .arg(bgColor.name()));
+    setStyleSheet(styleHelper.getDockWidgetStyle(bgColor));
 
-    QString treeStyle = QString(R"(
-        QTreeView {
-            background-color: %1;
-            color: %2;
-            border: none;
-            outline: none;
-            font-family: "%6";
-            font-size: %7pt;
-            show-decoration-selected: 1;
-        }
-        QTreeView::item {
-            padding: 2px 4px;
-            border: none;
-            min-height: 22px;
-        }
-        QTreeView::item:hover {
-            background-color: %5;
-        }
-        QTreeView::item:selected {
-            background-color: %8;
-            color: %4;
-        }
-        QTreeView::item:selected:active {
-            background-color: %8;
-        }
-        QTreeView::item:selected:!active {
-            background-color: %3;
-        }
-        QTreeView::branch {
-            background-color: %1;
-        }
-        QTreeView::branch:has-siblings:!adjoins-item {
-            border-image: none;
-        }
-        QTreeView::branch:has-siblings:adjoins-item {
-            border-image: none;
-        }
-        QTreeView::branch:!has-children:!has-siblings:adjoins-item {
-            border-image: none;
-        }
-        QTreeView::branch:has-children:!has-siblings:closed,
-        QTreeView::branch:closed:has-children:has-siblings {
-            border-image: none;
-            image: none;
-        }
-        QTreeView::branch:open:has-children:!has-siblings,
-        QTreeView::branch:open:has-children:has-siblings {
-            border-image: none;
-            image: none;
-        }
-    )")
-                            .arg(bgColor.name())           // %1 - background
-                            .arg(fgColor.name())           // %2 - foreground
-                            .arg(selectionBg.name())       // %3 - selection background (inactive)
-                            .arg(selectionFg.name())       // %4 - selection foreground
-                            .arg(hoverBg.name())           // %5 - hover background
-                            .arg(explorerFont.family())    // %6 - font family
-                            .arg(explorerFont.pointSize()) // %7 - font size
-                            .arg(primaryColor.name());     // %8 - active selection background
+    m_treeView->setStyleSheet(styleHelper.getTreeViewStyle(bgColor, fgColor, selectionBg, selectionFg,
+                                                           hoverBg, primaryColor, explorerFont));
+    m_treeView->setIndentation(20);
+    m_treeView->setAnimated(false);
+    m_treeView->setUniformRowHeights(true);
+    m_treeView->setRootIsDecorated(true);
+    m_treeView->setItemsExpandable(true);
+    m_treeView->setHeaderHidden(true);
 
-    m_treeView->setStyleSheet(treeStyle);
-    m_treeView->setIndentation(20);         // VSCode-like indentation
-    m_treeView->setAnimated(false);         // Disable animations for snappier feel
-    m_treeView->setUniformRowHeights(true); // Better performance
-
-    // Apply to welcome label
+    // Apply styling to labels
+    QString labelStyle = styleHelper.getLabelStyle(fgColor);
     m_welcomeLabel->setFont(explorerFont);
-    m_welcomeLabel->setStyleSheet(QString("color: %1;").arg(fgColor.name()));
+    m_welcomeLabel->setStyleSheet(labelStyle);
 
-    // Apply to other tab labels
     if (m_searchLabel)
     {
         m_searchLabel->setFont(explorerFont);
-        m_searchLabel->setStyleSheet(QString("color: %1;").arg(fgColor.name()));
-    }
-
-    if (m_sourceControlLabel)
-    {
-        m_sourceControlLabel->setFont(explorerFont);
-        m_sourceControlLabel->setStyleSheet(QString("color: %1;").arg(fgColor.name()));
+        m_searchLabel->setStyleSheet(labelStyle);
     }
 }
 
@@ -610,7 +523,6 @@ void Sidebar::createNewFile()
         }
     }
 
-    // Create the file
     QFile file(filePath);
     if (file.open(QIODevice::WriteOnly | QIODevice::Text))
     {

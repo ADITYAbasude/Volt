@@ -38,9 +38,9 @@ void StatusBar::applyTheme()
     Theme& theme = Theme::instance();
     
     // Get colors from JSON theme
-    QColor bgColor = theme.getColor("statusBar.background", QColor("#007ACC"));
-    QColor fgColor = theme.getColor("statusBar.foreground", QColor("#FFFFFF"));
-    QColor borderColor = theme.getColor("statusBar.border", bgColor.darker(120));
+    QColor bgColor = theme.getColor("statusBar.background");
+    QColor fgColor = theme.getColor("statusBar.foreground");
+    QColor borderColor = theme.getColor("statusBar.border");
     
     // Get dimensions from JSON theme
     int height = theme.getDimensionInt("statusBar.height", 22);

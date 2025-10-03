@@ -17,6 +17,8 @@
 #include "../components/CustomTabWidget.h"
 #include "../components/CustomTabBar.h"
 
+class FileIconProvider;
+
 class Sidebar : public QDockWidget
 {
     Q_OBJECT
@@ -72,6 +74,7 @@ private:
     // Tree View
     QTreeView *m_treeView;
     QFileSystemModel *m_fileSystemModel;
+    FileIconProvider *m_fileIconProvider;
 
     // Welcome Screen
     QWidget *m_welcomeWidget;
@@ -80,9 +83,7 @@ private:
 
     // Other Tab Components
     QWidget *m_searchWidget;
-    QWidget *m_sourceControlWidget;
     QLabel *m_searchLabel;
-    QLabel *m_sourceControlLabel;
 
     QString m_currentRootPath;
 

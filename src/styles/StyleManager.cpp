@@ -22,7 +22,7 @@ StyleManager::StyleManager()
 void StyleManager::updateStyles()
 {
     applyGlobalScrollbarStyle();
-    // Note: applyGlobalScrollbarStyle() now also calls applyScrollbarPolicyToAll()
+    // applyGlobalScrollbarStyle will also apply scrollbar policies
 }
 
 // Editor style getters
@@ -143,11 +143,9 @@ QString StyleManager::getGlobalScrollbarStyleSheet() const
             background: transparent;
         }
         
-        /* Corner */
         QScrollBar::corner {
             background: %1;
         }
-        /* Smooth Scrolling */
         QScrollBar {
             qproperty-smoothScrolling: %9;
             qproperty-scrollSensitivity: %10;

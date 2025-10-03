@@ -37,17 +37,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 void MainWindow::setupEditor()
 {
-    // Create and set the editor as central widget
     CodeEditor *editor = new CodeEditor(this);
-    // setCentralWidget(editor); //! have to remove
 
-    // setup QTab centeral widget
     editorTab = new QTabWidget(this);
-    editorTab->setTabsClosable(true); // Make tabs closable
-    editorTab->setMovable(true);      // Allow tab reordering
+    editorTab->setTabsClosable(true);
+    editorTab->setMovable(true);
+    editorTab->tabBar()->setExpanding(true);
     setCentralWidget(editorTab);
 
-    // Improve tab appearance
     if (editorTab->tabBar())
     {
         QTabBar *tb = editorTab->tabBar();
@@ -58,24 +55,18 @@ void MainWindow::setupEditor()
         connect(tb, &QTabBar::customContextMenuRequested, this, &MainWindow::onTabContextMenuRequested);
     }
 
-    // Connect tab close signal
     connect(editorTab, &QTabWidget::tabCloseRequested, this, &MainWindow::onTabCloseRequested);
-    
-    // Connect tab change signal to refresh themes
     connect(editorTab, &QTabWidget::currentChanged, this, &MainWindow::onCurrentTabChanged);
 
-    // Apply scrollbar policy to the editor
     StyleManager::setupWidgetScrollbars(editor);
-    
-    // Remove focus outline from editor
+
     editor->setStyleSheet("QsciScintilla { border: none; outline: none; }");
 
-    // TODO: Show here welcome tab instead to this welcome message
-    // Create a container widget that holds the editor and minimap side-by-side
+    // Welcome tab container
     QWidget *container = new QWidget(this);
     QHBoxLayout *h = new QHBoxLayout(container);
     h->setContentsMargins(0,0,0,0);
-    h->setSpacing(4);
+    h->setSpacing(0);
     container->setLayout(h);
 
     // Add editor into container
@@ -84,6 +75,9 @@ void MainWindow::setupEditor()
     // Create minimap for this editor
     Minimap *minimap = new Minimap(editor, container);
     h->addWidget(minimap);
+    Theme &theme = Theme::instance();
+    QColor editorBg = theme.getColor("editor.background");
+    container->setStyleSheet(QString("background-color: %1;").arg(editorBg.name()));
 
     // Sample welcome content
     editor->setText("// Welcome to Volt Editor\n\n"
@@ -229,38 +223,13 @@ void MainWindow::applyTheme()
     // Style the tab bar according to theme
     if (editorTab && editorTab->tabBar())
     {
-        QColor tabBg = theme.getColor("editor.tab.background");
-        QColor tabFg = theme.getColor("tabs.foreground", QColor("#dcdcdc"));
-        QColor tabSelBg = theme.getColor("secondary");
+        QColor tabBg = theme.getColor("editor.background");
+        QColor tabFg = theme.getColor("editor.foreground");
         QColor primary = theme.getColor("primary");
-        QColor tabSelFg = theme.getColor("tabs.selectedForeground", QColor("#ffffff"));
 
-        QString tabStyle = QString(R"(
-            QTabBar::tab {
-                background: %1;
-                color: %2;
-                padding: 6px 10px;
-                margin-right: 2px;
-            }
-            QTabBar::tab:selected {
-                background: %3;
-                color: %4;
-                border-top: 2px solid %5;
-            }
-            QTabBar::tab:!selected {
-                margin-top: 2px;
-            }
-        )")
-                               .arg(tabBg.name())
-                               .arg(tabFg.name())
-                               .arg(tabSelBg.name())
-                               .arg(tabSelFg.name())
-                               .arg(primary.name());
-
-        editorTab->tabBar()->setStyleSheet(tabStyle);
+            // Tab styling is applied via StyleHelper/StyleManager
     }
 
-    // Apply theme to status bar
     if (statusBar)
     {
         statusBar->applyTheme();
@@ -372,18 +341,16 @@ void MainWindow::openFile(const QString &filePath)
     // create new editor instance
     CodeEditor *editor = new CodeEditor(this);
     editor->setText(content);
-    
+
     // Apply theme and scrollbars to new editor
     StyleManager::setupWidgetScrollbars(editor);
     editor->refreshTheme();
-    
-    // Remove focus outline from editor
+
     editor->setStyleSheet("QsciScintilla { border: none; outline: none; }");
 
-    // Wrap editor and minimap in container so both appear inside the tab
     QWidget *container = new QWidget(this);
     QHBoxLayout *h = new QHBoxLayout(container);
-    h->setContentsMargins(0,0,0,0);
+    h->setContentsMargins(0, 0, 0, 0);
     h->setSpacing(4);
     container->setLayout(h);
     h->addWidget(editor, 1);
@@ -391,10 +358,10 @@ void MainWindow::openFile(const QString &filePath)
     h->addWidget(minimap);
 
     int idx = editorTab->addTab(container, fileInfo.fileName());
-    editorTab->setTabToolTip(idx, filePath); // Store full path in tooltip
+    editorTab->setTabToolTip(idx, filePath);
     if (editorTab->tabBar())
     {
-        editorTab->tabBar()->setTabData(idx, filePath); // Store full path in tab bar data for quick lookup
+        editorTab->tabBar()->setTabData(idx, filePath);
     }
     editorTab->setTabIcon(idx, QIcon(":/icons/app.ico"));
     editorTab->setCurrentIndex(idx);
@@ -507,7 +474,7 @@ void MainWindow::onCurrentTabChanged(int index)
             }
         }
     }
-    
+
     // Update window title
     if (index >= 0 && index < editorTab->count())
     {

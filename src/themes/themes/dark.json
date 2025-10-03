@@ -14,9 +14,9 @@
     "editor.matchingBrace": "#ffd700",
     "editor.tab.background": "#202222",
 
-    "statusBar.background": "#007acc",
-    "statusBar.foreground": "#ffffff",
-    "statusBar.border": "#007acc",
+    "statusBar.background": "#ffca2c",
+    "statusBar.foreground": "#000",
+    "statusBar.border": "#ffca2d",
 
     "menu.background": "#252526",
     "menu.foreground": "#cccccc",
@@ -44,7 +44,7 @@
     "scrollbar.handle": "#464647",
     "scrollbar.handleHover": "#5a5a5c",
     "scrollbar.handlePressed": "#6c6c6e",
-    "scrollbar.corner": "#2d2d30"
+    "scrollbar.corner": "#1e1e1e"
   },
   "fonts": {
     "editor": {
