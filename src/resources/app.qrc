@@ -1,12 +1,8 @@
 <!DOCTYPE RCC>
 <RCC>
-    <qresource prefix="/">
-        <file>icons/app.ico</file>
-        <file>icons/new_file.svg</file>
-        <file>icons/collapse_all.svg</file>
-        <file>icons/folder-closed.png</file>
-        <file>icons/folder-open.png</file>
-        <file>icons/icons-carbon.json</file>
-        <file>fonts/icons-carbon.ttf</file>
-    </qresource>
+  <qresource prefix="/">
+    <file>icons/app.ico</file>
+    <file>icons/icons-carbon.json</file>
+    <file>fonts/icons-carbon.ttf</file>
+  </qresource>
 </RCC>

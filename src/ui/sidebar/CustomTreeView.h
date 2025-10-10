@@ -31,7 +31,7 @@ public:
     
 protected:
     void drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index) const override;
-    
+    void drawRow(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 private:
     FileItemDelegate *m_itemDelegate;
 };

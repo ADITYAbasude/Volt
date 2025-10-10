@@ -87,11 +87,16 @@ void Sidebar::createExplorerTab()
     m_mainLayout = new QVBoxLayout(m_explorerWidget);
     m_explorerTopBar = new QHBoxLayout();
 
-    m_mainLayout->addStretch();
+    // m_mainLayout->addStretch();
+
+    m_mainLayout->setContentsMargins(0, 0, 0, 0);
+    m_mainLayout->setSpacing(0);
 
     qreal devicePixelRatio = this->devicePixelRatio();
     // Create high-DPI pixmap for crisp icons
     QPixmap newFileIcon(QSize(24, 24) * devicePixelRatio);
+    QPixmap collapseAllIcon(QSize(24, 24) * devicePixelRatio);
+
     newFileIcon.setDevicePixelRatio(devicePixelRatio);
     newFileIcon.fill(Qt::transparent);
     {
@@ -119,18 +124,51 @@ void Sidebar::createExplorerTab()
             painter.drawText(iconRect, Qt::AlignCenter | Qt::AlignVCenter, newFileChar);
         }
     }
+
+    // collaspe all icon
+    collapseAllIcon.setDevicePixelRatio(devicePixelRatio);
+    collapseAllIcon.fill(Qt::transparent);
+    {
+        QPainter painter(&collapseAllIcon);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        painter.setRenderHint(QPainter::TextAntialiasing, true);
+        painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+
+        QFont carbonFont = m_font;
+        carbonFont.setPixelSize(18);
+        carbonFont.setHintingPreference(QFont::PreferNoHinting);
+
+        painter.setFont(carbonFont);
+        painter.setPen(QColor("#CCCCCC"));
+
+        QChar collapseAllChar = Theme::instance().getCarbonIconChar("chevron-up");
+        if (!collapseAllChar.isNull())
+        {
+            VOLT_DEBUG_F("Using Carbon icon for collapse all: U+%1 char: %2", QString::number(collapseAllChar.unicode(), 16).rightJustified(4, '0').toUpper().append(" ").append(collapseAllChar));
+            QRect iconRect = collapseAllIcon.rect();
+            if (devicePixelRatio > 1.0)
+            {
+                iconRect = QRect(0, 0, 24, 24);
+            }
+            painter.drawText(iconRect, Qt::AlignCenter | Qt::AlignVCenter, collapseAllChar);
+        }
+    }
     m_createFileButton = new IconButton("Create New File", this);
-    m_collapseButton = new IconButton(":/icons/collapse_all.svg", "Collapse All", this);
+    m_collapseButton = new IconButton("Collapse All", this);
+
+    m_createFileButton->setIconSize(QSize(22, 22));
+    m_collapseButton->setButtonSize(QSize(22, 22));
 
     m_pathEdit = new QLabel("No folder opened", this);
     m_pathEdit->setWordWrap(true);
     m_pathEdit->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     m_createFileButton->setIcon(QIcon(newFileIcon));
+    m_collapseButton->setIcon(QIcon(collapseAllIcon));
 
+    m_explorerTopBar->addStretch();
     m_explorerTopBar->addWidget(m_createFileButton);
     m_explorerTopBar->addWidget(m_collapseButton);
-    m_explorerTopBar->addStretch();
 
     m_explorerTopBar->addWidget(m_pathEdit);
 
@@ -139,6 +177,7 @@ void Sidebar::createExplorerTab()
 
     // Tree view
     m_treeView = new CustomTreeView(this);
+    m_treeView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     m_treeView->setHeaderHidden(true);
     m_treeView->setRootIsDecorated(true);
     m_treeView->setAlternatingRowColors(false);
@@ -146,6 +185,7 @@ void Sidebar::createExplorerTab()
     m_treeView->sortByColumn(0, Qt::AscendingOrder);
     m_treeView->setExpandsOnDoubleClick(false);
     m_treeView->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_treeView->setIndentation(16);
 
     // Welcome screen
     m_welcomeWidget = new QWidget(this);
@@ -162,8 +202,8 @@ void Sidebar::createExplorerTab()
     m_stackedWidget->addWidget(m_treeView);
 
     m_mainLayout->addLayout(m_explorerTopBar);
+    m_stackedWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     m_mainLayout->addWidget(m_stackedWidget);
-    m_mainLayout->addStretch();
 
     // Connect signals
     connect(m_welcomeOpenFolderButton, &QPushButton::clicked, this, &Sidebar::openFolder);
@@ -282,7 +322,7 @@ void Sidebar::createSourceControlTab()
     QChar sourceControlChar = Theme::instance().getCarbonIconChar("source-control");
     if (!sourceControlChar.isNull())
     {
-        
+
         QRect iconRect = sourceControlIcon.rect();
         if (devicePixelRatio > 1.0)
         {
@@ -468,7 +508,7 @@ void Sidebar::applyTheme()
 
     m_treeView->setStyleSheet(styleHelper.getTreeViewStyle(bgColor, fgColor, selectionBg, selectionFg,
                                                            hoverBg, primaryColor, explorerFont));
-    m_treeView->setIndentation(20);
+    m_treeView->setIndentation(16);
     m_treeView->setAnimated(false);
     m_treeView->setUniformRowHeights(true);
     m_treeView->setRootIsDecorated(true);

@@ -2,6 +2,7 @@
   "colors": {
     "primary": "#ffca2c",
     "secondary": "#1e1e1e",
+    "hoverColor": "#42403c",
     "editor.background": "#1e1e1e",
     "editor.foreground": "#fff",
     "editor.lineNumber.background": "#1e1e1e",
