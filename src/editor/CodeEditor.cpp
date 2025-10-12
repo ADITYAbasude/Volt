@@ -1,25 +1,23 @@
 #include "CodeEditor.h"
 #include "../themes/Theme.h"
-#include "./logging/VoltLogger.h"
+#include "../logging/VoltLogger.h"
 
 CodeEditor::CodeEditor(QWidget *parent)
     : QsciScintilla(parent), lexer(nullptr)
 {
-    Theme::instance().loadTheme("dark"); 
-    
+    Theme::instance().loadTheme("dark");
+
     setupEditor();
-        
     applyTheme();
+
+    // Connect cursor position change to update margin colors
+    connect(this, &QsciScintilla::cursorPositionChanged,
+            this, &CodeEditor::updateMarginColors);
 }
 
 void CodeEditor::setupEditor()
 {
-    setMarginType(0, QsciScintilla::NumberMargin);
-    setMarginWidth(0, fontMetrics().horizontalAdvance(QLatin1Char('9')) * 6);
-    setMarginLineNumbers(0, true);
-    
-    setViewportMargins(5, 0, 5, 0);
-
+    // Editor behavior
     setAutoIndent(true);
     setIndentationGuides(true);
     setIndentationsUseTabs(false);
@@ -27,92 +25,52 @@ void CodeEditor::setupEditor()
     setBraceMatching(QsciScintilla::SloppyBraceMatch);
     setSelectionToEol(true);
     setWrapMode(QsciScintilla::WrapNone);
-
     setCaretWidth(2);
 
-    SendScintilla(SCI_SETHSCROLLBAR, 0); 
-    SendScintilla(SCI_SETVSCROLLBAR, 0); 
+    // Viewport and scrollbars
+    setViewportMargins(0, 0, 0, 0);
+    SendScintilla(SCI_SETHSCROLLBAR, 0);
+    SendScintilla(SCI_SETVSCROLLBAR, 0);
     SendScintilla(SCI_SETYCARETPOLICY, CARET_SLOP | CARET_EVEN, 0L);
-    
-    setFolding(QsciScintilla::BoxedTreeFoldStyle);
+
+    // Frame
+    setFrameStyle(QFrame::NoFrame);
 }
 
+void CodeEditor::applyTheme()
+{
+    Theme &theme = Theme::instance();
 
-void CodeEditor::applyTheme() {
-    Theme& theme = Theme::instance();
-    
+    // Get theme colors
     QColor bg = theme.getColor("editor.background");
-    
     QColor fg = theme.getColor("editor.foreground");
-    if (!fg.isValid()) {
-        fg = QColor("#d4d4d4");
-        qDebug() << "Using fallback foreground color";
-    }
-    
-    QColor marginBg = theme.getColor("secondary");
-    
-    QColor marginFg = theme.getColor("editor.lineNumber.foreground");
-    if (!marginFg.isValid()) marginFg = QColor("#858585");
-    
     QColor selectionBg = theme.getColor("editor.selectionBackground");
-    if (!selectionBg.isValid()) selectionBg = QColor("#264f78");
-    
     QColor currentLineBg = theme.getColor("editor.currentLine");
-    if (!currentLineBg.isValid()) currentLineBg = QColor("#2a2d2e");
-    
     QColor caretColor = theme.getColor("editor.cursor");
-    if (!caretColor.isValid()) caretColor = QColor("#f80303ff");
-    
     QColor matchBrace = theme.getColor("editor.matchingBrace");
-    if (!matchBrace.isValid()) matchBrace = QColor("#ffd700");
-    
     QColor indentGuide = theme.getColor("editor.indent.guide");
-    if (!indentGuide.isValid()) indentGuide = QColor("#404040");
-    
-    QColor commentColor = theme.getColor("syntax.comment");
-    if (!commentColor.isValid()) commentColor = QColor("#6a9955");
-    
-    QColor stringColor = theme.getColor("syntax.string");
-    if (!stringColor.isValid()) stringColor = QColor("#ce9178");
-    
-    QColor numberColor = theme.getColor("syntax.number");
-    if (!numberColor.isValid()) numberColor = QColor("#b5cea8");
-    
-    QColor keywordColor = theme.getColor("syntax.keyword");
-    if (!keywordColor.isValid()) keywordColor = QColor("#569cd6");
-    
-    QColor classColor = theme.getColor("syntax.class");
-    if (!classColor.isValid()) classColor = QColor("#4ec9b0");
-    
-    QColor variableColor = theme.getColor("syntax.variable");
-    if (!variableColor.isValid()) variableColor = QColor("#9cdcfe");
-    
-    QColor operatorColor = theme.getColor("syntax.operator");
-    if (!operatorColor.isValid()) operatorColor = QColor("#d4d4d4");
-    
-    QColor preprocessorColor = theme.getColor("syntax.preprocessor");
-    if (!preprocessorColor.isValid()) preprocessorColor = QColor("#569cd6");
-    
+
+    // Get font
     QFont editorFont = theme.getFont("editor");
-    if (editorFont.family().isEmpty()) {
+    if (editorFont.family().isEmpty())
+    {
         editorFont = QFont("Consolas", 10);
-        qDebug() << "Using fallback font: Consolas 10pt";
-    } else {
-        qDebug() << "Using theme font:" << editorFont.family() << editorFont.pointSize() << "pt";
     }
 
+    // Clear and set default styles
     SendScintilla(SCI_CLEARDOCUMENTSTYLE);
-    
     SendScintilla(SCI_STYLESETBACK, STYLE_DEFAULT, bg.rgb());
     SendScintilla(SCI_STYLESETFORE, STYLE_DEFAULT, fg.rgb());
     SendScintilla(SCI_STYLESETFONT, STYLE_DEFAULT, editorFont.family().toUtf8().data());
     SendScintilla(SCI_STYLESETSIZE, STYLE_DEFAULT, editorFont.pointSize());
     SendScintilla(SCI_STYLECLEARALL);
-    
+
+    // Apply base colors and font
     setPaper(bg);
     setColor(fg);
     setFont(editorFont);
-    
+
+    // Configure widget background
     setAutoFillBackground(true);
     setAttribute(Qt::WA_OpaquePaintEvent, true);
     QPalette pal = palette();
@@ -120,118 +78,196 @@ void CodeEditor::applyTheme() {
     pal.setColor(QPalette::Window, bg);
     setPalette(pal);
     setBackgroundRole(QPalette::Base);
-    setBraceMatching(QsciScintilla::SloppyBraceMatch);
 
-    VoltLogger::VOLT_DEBUG_F("Margin background color: %1", marginBg.name());
-    setMarginsBackgroundColor(marginBg);
+    // Apply stylesheet
+    setStyleSheet(QString("QsciScintilla { background-color: %1; border: none; outline: none; }").arg(bg.name()));
 
-    setFrameStyle(QFrame::NoFrame);
-    setStyleSheet("QsciScintilla { border: none; outline: none; }");
+    configureLexer();
 
-    QColor gutterBg = marginBg.isValid() ? marginBg : bg;
-    
-    setMarginsBackgroundColor(gutterBg);
-    setMarginsForegroundColor(marginFg);
-    setMarginsFont(editorFont);
-    setFoldMarginColors(gutterBg, gutterBg.darker(110));
+    // Configure margins AFTER lexer is set
+    configureMargins();
 
-    SendScintilla(SCI_STYLESETBACK, STYLE_LINENUMBER, gutterBg.rgb());
-    SendScintilla(SCI_STYLESETFORE, STYLE_LINENUMBER, marginFg.rgb());
-
-    for (int m = 0; m < 32; ++m) {
-        SendScintilla(SCI_MARKERSETBACK, m, gutterBg.rgb());
-        SendScintilla(SCI_MARKERSETFORE, m, marginFg.rgb());
-    }
-    
+    // Selection
     setSelectionBackgroundColor(selectionBg);
     setSelectionForegroundColor(Qt::white);
     SendScintilla(SCI_SETSELFORE, true);
-    
+
+    // Caret and current line
     setCaretForegroundColor(caretColor);
     setCaretLineVisible(true);
     setCaretLineBackgroundColor(currentLineBg);
     setCaretWidth(2);
-    
+
+    // Brace matching
     setMatchedBraceBackgroundColor(matchBrace);
     setMatchedBraceForegroundColor(Qt::black);
     setUnmatchedBraceForegroundColor(Qt::red);
     setUnmatchedBraceBackgroundColor(Qt::yellow);
-    
+
+    // Indentation guides
     setIndentationGuidesBackgroundColor(bg);
     setIndentationGuidesForegroundColor(indentGuide);
-    
-    setFoldMarginColors(marginBg, marginBg.lighter(120));
-    
-    if (!lexer) {
+
+    // Force repaint
+    SendScintilla(SCI_COLOURISE, 0, -1);
+    update();
+}
+
+void CodeEditor::configureLexer()
+{
+    Theme &theme = Theme::instance();
+
+    QColor bg = theme.getColor("editor.background");
+    QColor fg = theme.getColor("editor.foreground");
+    QColor commentColor = theme.getColor("syntax.comment");
+    QColor stringColor = theme.getColor("syntax.string");
+    QColor numberColor = theme.getColor("syntax.number");
+    QColor keywordColor = theme.getColor("syntax.keyword");
+    QColor classColor = theme.getColor("syntax.class");
+    QColor variableColor = theme.getColor("syntax.variable");
+    QColor operatorColor = theme.getColor("syntax.operator");
+    QColor preprocessorColor = theme.getColor("syntax.preprocessor");
+
+    QFont editorFont = theme.getFont("editor");
+    if (editorFont.family().isEmpty())
+    {
+        editorFont = QFont("Consolas", 10);
+    }
+
+    if (!lexer)
+    {
         lexer = new QsciLexerCPP(this);
     }
-    
-    for (int style = 0; style <= 40; ++style) {
+
+    // Set base colors for all styles
+    for (int style = 0; style <= 40; ++style)
+    {
         lexer->setPaper(bg, style);
         lexer->setFont(editorFont, style);
     }
-    
+
+    // Configure syntax colors
     lexer->setColor(fg, QsciLexerCPP::Default);
-    
+
+    // Comments
     lexer->setColor(commentColor, QsciLexerCPP::Comment);
     lexer->setColor(commentColor, QsciLexerCPP::CommentLine);
     lexer->setColor(commentColor, QsciLexerCPP::CommentDoc);
     lexer->setColor(commentColor, QsciLexerCPP::CommentLineDoc);
     lexer->setColor(commentColor, QsciLexerCPP::CommentDocKeyword);
     lexer->setColor(commentColor, QsciLexerCPP::CommentDocKeywordError);
-    
+    lexer->setColor(commentColor, QsciLexerCPP::TaskMarker);
+
+    // Numbers
     lexer->setColor(numberColor, QsciLexerCPP::Number);
-    
+    lexer->setColor(numberColor, QsciLexerCPP::UUID);
+    lexer->setColor(numberColor, QsciLexerCPP::UserLiteral);
+
+    // Keywords
     QFont keywordFont = editorFont;
     keywordFont.setBold(true);
     lexer->setColor(keywordColor, QsciLexerCPP::Keyword);
     lexer->setFont(keywordFont, QsciLexerCPP::Keyword);
-    
     lexer->setColor(classColor, QsciLexerCPP::KeywordSet2);
     lexer->setFont(keywordFont, QsciLexerCPP::KeywordSet2);
-    
+
+    // Strings
     lexer->setColor(stringColor, QsciLexerCPP::DoubleQuotedString);
     lexer->setColor(stringColor, QsciLexerCPP::SingleQuotedString);
     lexer->setColor(stringColor, QsciLexerCPP::RawString);
     lexer->setColor(stringColor, QsciLexerCPP::VerbatimString);
     lexer->setColor(stringColor, QsciLexerCPP::HashQuotedString);
-    
-    lexer->setColor(variableColor, QsciLexerCPP::Identifier);
-    
-    lexer->setColor(operatorColor, QsciLexerCPP::Operator);
-    
-    lexer->setColor(preprocessorColor, QsciLexerCPP::PreProcessor);
     lexer->setColor(stringColor, QsciLexerCPP::PreProcessorComment);
-    
+    lexer->setColor(stringColor, QsciLexerCPP::Regex);
+
+    // Identifiers and operators
+    lexer->setColor(variableColor, QsciLexerCPP::Identifier);
+    lexer->setColor(operatorColor, QsciLexerCPP::Operator);
+
+    // Preprocessor
+    lexer->setColor(preprocessorColor, QsciLexerCPP::PreProcessor);
+
+    // Classes
     lexer->setColor(classColor, QsciLexerCPP::GlobalClass);
     lexer->setFont(keywordFont, QsciLexerCPP::GlobalClass);
-    
-    lexer->setColor(numberColor, QsciLexerCPP::UUID);
-    
-    lexer->setColor(stringColor, QsciLexerCPP::Regex);
-    
-    lexer->setColor(numberColor, QsciLexerCPP::UserLiteral);
-    
-    lexer->setColor(commentColor, QsciLexerCPP::TaskMarker);
+
+    // Special formatting
     QFont italicFont = editorFont;
     italicFont.setItalic(true);
     lexer->setFont(italicFont, QsciLexerCPP::TaskMarker);
-    
     lexer->setColor(QColor("#d7ba7d"), QsciLexerCPP::EscapeSequence);
-    
-    setLexer(lexer);
-    
-    SendScintilla(SCI_COLOURISE, 0, -1);
-    update();
-    viewport()->update();
-    repaint();
 
-    setMarginWidth(0, fontMetrics().horizontalAdvance(QLatin1Char('9')) * 6);
-    
-    qDebug() << "=== THEME APPLICATION COMPLETED ===";
+    setLexer(lexer);
 }
 
-void CodeEditor::refreshTheme() {
-    qDebug() << "CodeEditor refreshTheme() called";
+void CodeEditor::configureMargins()
+{
+    Theme &theme = Theme::instance();
+
+    QColor marginBg = theme.getColor("editor.lineNumber.background");
+    QColor marginFg = theme.getColor("editor.lineNumber.foreground");
+
+    QFont editorFont = theme.getFont("editor");
+    if (editorFont.family().isEmpty())
+    {
+        editorFont = QFont("Consolas", 10);
+    }
+
+    // Margin 0: Line numbers
+    setMarginType(0, QsciScintilla::NumberMargin);
+    setMarginWidth(0, fontMetrics().horizontalAdvance(QLatin1Char('9')) * 6);
+    setMarginLineNumbers(0, true);
+    SendScintilla(SCI_SETMARGINBACKN, 0, marginBg.rgb());
+
+    // Apply global margin colors
+    setMarginsBackgroundColor(marginBg);
+    setMarginsForegroundColor(marginFg);
+    setMarginsFont(editorFont);
+
+    // Configure line number style
+    SendScintilla(SCI_STYLESETBACK, STYLE_LINENUMBER, marginBg.rgb());
+    SendScintilla(SCI_STYLESETFORE, STYLE_LINENUMBER, marginFg.rgb());
+    SendScintilla(SCI_STYLESETFONT, STYLE_LINENUMBER, editorFont.family().toUtf8().data());
+    SendScintilla(SCI_STYLESETSIZE, STYLE_LINENUMBER, editorFont.pointSize());
+
+    // Configure markers
+    for (int m = 0; m < 32; ++m)
+    {
+        SendScintilla(SCI_MARKERSETBACK, m, marginBg.rgb());
+        SendScintilla(SCI_MARKERSETFORE, m, marginFg.rgb());
+    }
+
+    // Configure folding
+    setFoldMarginColors(marginBg, marginBg);
+    setFolding(QsciScintilla::BoxedTreeFoldStyle);
+    SendScintilla(SCI_SETMARGINBACKN, 2, marginBg.rgb());
+}
+
+void CodeEditor::updateMarginColors()
+{
+    Theme &theme = Theme::instance();
+
+    QColor marginBg = theme.getColor("editor.lineNumber.background");
+    QColor marginFg = theme.getColor("editor.lineNumber.foreground");
+    QColor currentLineBg = theme.getColor("editor.currentLine");
+
+    int currentLine, currentCol;
+    getCursorPosition(&currentLine, &currentCol);
+
+    // Get total lines for margin width calculation
+    int totalLines = lines();
+
+    // Update each line's margin color
+    for (int line = 0; line < totalLines; ++line)
+    {
+        if (line == currentLine)
+        {
+            SendScintilla(SCI_MARGINSETSTYLE, line, STYLE_LINENUMBER);
+        }
+    }
+}
+
+void CodeEditor::refreshTheme()
+{
     applyTheme();
 }

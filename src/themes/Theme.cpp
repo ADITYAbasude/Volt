@@ -15,9 +15,8 @@ Theme& Theme::instance() {
 }
 
 void Theme::loadTheme(const QString& themeName) {
-    // Use applicationDirPath instead of currentPath for reliable theme file location
     QString appDir = QCoreApplication::applicationDirPath();
-    QString themePath = appDir + "/themes/themes/" + themeName + ".json";  // Fixed double nested path
+    QString themePath = appDir + "/themes/themes/" + themeName + ".json"; 
     
     VOLT_THEME_F("Loading theme from: %1", themePath);
     loadJsonTheme(themePath);

@@ -31,7 +31,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     setupSidebar();
     applyTheme();
 
-    // Connect theme change signal to refresh all components
     connect(&Theme::instance(), &Theme::themeChanged, this, &MainWindow::onThemeChanged);
 }
 
@@ -49,7 +48,7 @@ void MainWindow::setupEditor()
     {
         QTabBar *tb = editorTab->tabBar();
         tb->setElideMode(Qt::ElideRight);
-        tb->setExpanding(false);
+        tb->setExpanding(true);
         tb->setUsesScrollButtons(true);
         tb->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(tb, &QTabBar::customContextMenuRequested, this, &MainWindow::onTabContextMenuRequested);
@@ -59,37 +58,6 @@ void MainWindow::setupEditor()
     connect(editorTab, &QTabWidget::currentChanged, this, &MainWindow::onCurrentTabChanged);
 
     StyleManager::setupWidgetScrollbars(editor);
-
-    editor->setStyleSheet("QsciScintilla { border: none; outline: none; }");
-
-    // Welcome tab container
-    QWidget *container = new QWidget(this);
-    QHBoxLayout *h = new QHBoxLayout(container);
-    h->setContentsMargins(0,0,0,0);
-    h->setSpacing(0);
-    container->setLayout(h);
-
-    // Add editor into container
-    h->addWidget(editor, 1);
-
-    // Create minimap for this editor
-    Minimap *minimap = new Minimap(editor, container);
-    h->addWidget(minimap);
-    Theme &theme = Theme::instance();
-    QColor editorBg = theme.getColor("editor.background");
-    container->setStyleSheet(QString("background-color: %1;").arg(editorBg.name()));
-
-    // Sample welcome content
-    editor->setText("// Welcome to Volt Editor\n\n"
-                    "#include <iostream>\n\n"
-                    "int main() {\n"
-                    "    std::cout << \"Hello, World!\" << std::endl;\n"
-                    "    return 0;\n"
-                    "}\n");
-
-    int idx = editorTab->addTab(container, "Welcome");
-    editorTab->setTabToolTip(idx, "Welcome");
-    editorTab->setTabIcon(idx, QIcon(":/icons/app.ico"));
 }
 
 void MainWindow::setupMenuBar()
@@ -125,7 +93,6 @@ void MainWindow::applyTheme()
 
     StyleManager::instance().applyGlobalScrollbarStyle();
 
-    // Apply editor margins from JSON
     QMargins editorMargins = theme.getDimensionMarginsFromArray("editor.margins", QMargins(5, 5, 5, 5));
     int tabWidth = theme.getDimensionInt("editor.tabWidth", 4);
 
@@ -146,14 +113,13 @@ void MainWindow::applyTheme()
         statusBar->applyTheme();
     }
 
-    // Apply menu styling from JSON
     if (menuBar())
     {
-        QColor menuBg = theme.getColor("menu.background", QColor("#252526"));
-        QColor menuFg = theme.getColor("menu.foreground", QColor("#CCCCCC"));
-        QColor menuBorder = theme.getColor("menu.border", QColor("#454545"));
-        QColor menuSelectionBg = theme.getColor("menu.selectionBackground", QColor("#04395E"));
-        QColor menuSelectionFg = theme.getColor("menu.selectionForeground", QColor("#FFFFFF"));
+        QColor menuBg = theme.getColor("menu.background");
+        QColor menuFg = theme.getColor("menu.foreground");
+        QColor menuBorder = theme.getColor("menu.border");
+        QColor menuSelectionBg = theme.getColor("menu.selectionBackground");
+        QColor menuSelectionFg = theme.getColor("menu.selectionForeground");
 
         int menuItemHeight = theme.getDimensionInt("menu.itemHeight", 24);
         QMargins menuPadding = theme.getDimensionMarginsFromArray("menu.padding", QMargins(8, 4, 8, 4));
@@ -202,40 +168,35 @@ void MainWindow::applyTheme()
                 color: %12;
             }
         )")
-                                     .arg(menuBg.name())           // %1 - background
-                                     .arg(menuFg.name())           // %2 - foreground
-                                     .arg(menuBorder.name())       // %3 - border
-                                     .arg(menuPadding.top())       // %4 - padding top
-                                     .arg(menuPadding.right())     // %5 - padding right
-                                     .arg(menuPadding.bottom())    // %6 - padding bottom
-                                     .arg(menuFont.family())       // %7 - font family
-                                     .arg(menuFont.pointSize())    // %8 - font size
-                                     .arg(menuPadding.left())      // %9 - padding left
-                                     .arg(menuItemHeight)          // %10 - item height
-                                     .arg(menuSelectionBg.name())  // %11 - selection background
-                                     .arg(menuSelectionFg.name()); // %12 - selection foreground
+                                     .arg(menuBg.name())
+                                     .arg(menuFg.name())
+                                     .arg(menuBorder.name())
+                                     .arg(menuPadding.top())
+                                     .arg(menuPadding.right())
+                                     .arg(menuPadding.bottom())
+                                     .arg(menuFont.family())
+                                     .arg(menuFont.pointSize())
+                                     .arg(menuPadding.left())
+                                     .arg(menuItemHeight)
+                                     .arg(menuSelectionBg.name())
+                                     .arg(menuSelectionFg.name());
 
         menuBar()->setStyleSheet(menuStyleSheet);
 
         qDebug() << "Applied menu theme - Background:" << menuBg.name() << "Height:" << menuItemHeight;
     }
 
-    // Style the tab bar according to theme
     if (editorTab && editorTab->tabBar())
     {
         QColor tabBg = theme.getColor("editor.background");
         QColor tabFg = theme.getColor("editor.foreground");
         QColor primary = theme.getColor("primary");
-
-            // Tab styling is applied via StyleHelper/StyleManager
     }
 
     if (statusBar)
     {
         statusBar->applyTheme();
     }
-
-    qDebug() << "MainWindow theme application completed!";
 }
 
 void MainWindow::onThemeChanged()
@@ -270,12 +231,10 @@ static int findTabIndexForPath(QTabWidget *tabWidget, const QString &filePath)
         return -1;
     }
 
-    VOLT_DEBUG_F("Tab count: %1", tabWidget->count());
     for (int i = 0; i < tabWidget->count(); ++i)
     {
         VOLT_DEBUG_F("Checking tab %1", i);
 
-        // Prefer tabData (we will store full path there)
         QVariant data;
         if (tabWidget->tabBar())
         {
@@ -283,35 +242,27 @@ static int findTabIndexForPath(QTabWidget *tabWidget, const QString &filePath)
         }
         if (data.isValid() && data.toString() == filePath)
         {
-            VOLT_DEBUG_F2("Found tab %1 for path: %2 (tabData)", i, filePath);
             return i;
         }
 
-        // Fallback: check tooltip (older code stored file name here)
         QString tabPath = tabWidget->tabToolTip(i);
         if (tabPath == filePath)
         {
-            VOLT_DEBUG_F2("Found tab %1 for path: %2 (tooltip)", i, filePath);
             return i;
         }
 
-        // Also compare displayed tab text (filename) as a last resort
         QString tabText = tabWidget->tabText(i);
         if (tabText == QFileInfo(filePath).fileName())
         {
-            VOLT_DEBUG_F2("Found tab %1 for path: %2 (tabText)", i, filePath);
             return i;
         }
     }
 
-    VOLT_DEBUG_F("No tab found for path: %1", filePath);
     return -1;
 }
 
 void MainWindow::openFile(const QString &filePath)
 {
-    // create new editor tab
-
     QFileInfo fileInfo(filePath);
     if (!fileInfo.exists() || !fileInfo.isFile())
     {
@@ -319,7 +270,6 @@ void MainWindow::openFile(const QString &filePath)
         return;
     }
 
-    // Check that this file is not already open
     int existingIndex = findTabIndexForPath(editorTab, filePath);
     if (existingIndex != -1)
     {
@@ -338,15 +288,12 @@ void MainWindow::openFile(const QString &filePath)
     QString content = in.readAll();
     file.close();
 
-    // create new editor instance
     CodeEditor *editor = new CodeEditor(this);
     editor->setText(content);
 
-    // Apply theme and scrollbars to new editor
     StyleManager::setupWidgetScrollbars(editor);
     editor->refreshTheme();
-
-    editor->setStyleSheet("QsciScintilla { border: none; outline: none; }");
+    editor->setStyleSheet("QsciScintilla { background-color: #1e1e1e, border: none; outline: none; }");
 
     QWidget *container = new QWidget(this);
     QHBoxLayout *h = new QHBoxLayout(container);
@@ -363,11 +310,9 @@ void MainWindow::openFile(const QString &filePath)
     {
         editorTab->tabBar()->setTabData(idx, filePath);
     }
-    editorTab->setTabIcon(idx, QIcon(":/icons/app.ico"));
     editorTab->setCurrentIndex(idx);
 
-    setWindowTitle(QString("Volt Editor - %1").arg(fileInfo.fileName()));
-
+    setWindowTitle(QString(" - %1").arg(fileInfo.fileName()));
     VoltLogger::instance().info("Opened file: %1", filePath);
 }
 
@@ -390,7 +335,6 @@ void MainWindow::onTabCloseRequested(int index)
     if (widget)
         widget->deleteLater();
 
-    // Update window title to reflect current tab
     int currentIndex = editorTab->currentIndex();
     if (currentIndex >= 0)
     {
@@ -461,7 +405,6 @@ void MainWindow::onTabContextMenuRequested(const QPoint &pos)
 
 void MainWindow::onCurrentTabChanged(int index)
 {
-    // Refresh theme on all editors when tab changes to prevent color issues
     if (editorTab)
     {
         for (int i = 0; i < editorTab->count(); ++i)

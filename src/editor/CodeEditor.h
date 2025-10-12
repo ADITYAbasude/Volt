@@ -14,7 +14,13 @@ public slots:
     void applyTheme();
     void refreshTheme();  // Force complete theme refresh
     
+private slots:
+    void updateMarginColors();
+    
 private:
     void setupEditor();
-    QsciLexerCPP *lexer; // lexer is used for syntax highlighting
+    void configureMargins();
+    void configureLexer();
+    
+    QsciLexerCPP *lexer;
 };

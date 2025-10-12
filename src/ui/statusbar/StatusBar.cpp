@@ -37,24 +37,19 @@ void StatusBar::applyTheme()
 {
     Theme& theme = Theme::instance();
     
-    // Get colors from JSON theme
     QColor bgColor = theme.getColor("statusBar.background");
     QColor fgColor = theme.getColor("statusBar.foreground");
     QColor borderColor = theme.getColor("statusBar.border");
     
-    // Get dimensions from JSON theme
     int height = theme.getDimensionInt("statusBar.height", 22);
     QMargins padding = theme.getDimensionMarginsFromArray("statusBar.padding", QMargins(8, 0, 8, 0));
     
-    // Get font from JSON theme
     QFont statusFont = theme.getFont("statusBar");
     if (statusFont.family().isEmpty()) {
         statusFont = QFont("Segoe UI", 9);
     }
-    // Apply height constraint
     setFixedHeight(height);
     
-    // Apply font to all labels
     setFont(statusFont);
     if (cursorPositionLabel) cursorPositionLabel->setFont(statusFont);
     if (languageLabel) languageLabel->setFont(statusFont);

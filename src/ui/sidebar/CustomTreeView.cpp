@@ -74,7 +74,6 @@ void FileItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
 
     painter->drawText(iconRect, Qt::AlignCenter, iconChar);
 
-    // Draw text starting after the icon, allow text to span fullRect width
     QRect textRect = fullRect;
     textRect.setLeft(iconRect.right() + 6);
     painter->setFont(option.font);
