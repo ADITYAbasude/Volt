@@ -2,10 +2,11 @@
 #pragma once
 #include <QMainWindow>
 #include <QTabWidget>
-#include "menubar/FileMenu.h"
 #include "statusbar/StatusBar.h"
 #include "sidebar/Sidebar.h"
 #include "../editor/CodeEditor.h"
+
+class FileMenu;
 
 class MainWindow : public QMainWindow
 {

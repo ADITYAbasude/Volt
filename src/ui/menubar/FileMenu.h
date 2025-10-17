@@ -1,16 +1,16 @@
 
-#ifndef FILEMENU_H
-#define FILEMENU_H
-
+#pragma once
 #include <QMenu>
 #include <QAction>
+
+class MainWindow;
 
 class FileMenu : public QMenu
 {
     Q_OBJECT
-    /* data */
 public:
     explicit FileMenu(QWidget *parent = nullptr);
+    void setMainWindow(MainWindow *mw);
     ~FileMenu() = default;
 
 private slots:
@@ -26,8 +26,6 @@ private:
     QAction *saveFileAction;
     QAction *saveAsFileAction;
     QAction *exitApplicationAction;
+
+    MainWindow *mainWindow;
 };
-
-#endif
-
-

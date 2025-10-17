@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "menubar/FileMenu.h"
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QTabBar>
@@ -63,6 +64,7 @@ void MainWindow::setupEditor()
 void MainWindow::setupMenuBar()
 {
     fileMenu = new FileMenu(this);
+    fileMenu->setMainWindow(this);
     menuBar()->addMenu(fileMenu);
 }
 

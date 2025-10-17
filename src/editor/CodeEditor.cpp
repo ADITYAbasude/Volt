@@ -10,7 +10,7 @@ CodeEditor::CodeEditor(QWidget *parent)
     setupEditor();
     applyTheme();
 
-    // Connect cursor position change to update margin colors
+    //* For updating margin colors on cursor move *// 
     connect(this, &QsciScintilla::cursorPositionChanged,
             this, &CodeEditor::updateMarginColors);
 }
