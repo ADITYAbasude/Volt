@@ -65,7 +65,7 @@ fi
 
 # Build the project
 echo "== Building Project =="
-cmake --build . --parallel 4 
+cmake --build . --parallel 4
 if [ $? -ne 0 ]; then
     echo "Build failed!"
     exit 1
@@ -75,44 +75,44 @@ echo "== Copying Qt DLLs =="
 if [ -n "$QT_DIR" ] && [ -d "$QT_DIR" ]; then
     echo "Copying DLLs directly from Qt installation: $QT_DIR"
     TARGET_DIR="."
-    
+
     echo "Copying Qt DLLs to build directory..."
     cp -f "$QT_DIR/bin/Qt6Core.dll" "$TARGET_DIR/" 2>/dev/null"
     cp -f "$QT_DIR/bin/Qt6Gui.dll" "$TARGET_DIR/" 2>/dev/null"
     cp -f "$QT_DIR/bin/Qt6Widgets.dll" "$TARGET_DIR/" 2>/dev/null"
     cp -f "$QT_DIR/bin/Qt6Svg.dll" "$TARGET_DIR/" 2>/dev/null"
-    
+
     cp -f "$QT_DIR/bin/qscintilla2_qt6.dll" "$TARGET_DIR/" 2>/dev/null"
-    
+
     # Copy platform plugin directly from Qt installation
     mkdir -p "$TARGET_DIR/platforms"
     cp -f "$QT_DIR/plugins/platforms/qwindows.dll" "$TARGET_DIR/platforms/" 2>/dev/null"
-    
+
     cp -f "../install_context_menu.reg" "$TARGET_DIR/" 2>/dev/null || true
     cp -f "../install.bat" "$TARGET_DIR/" 2>/dev/null || true
     cp -f "../uninstall.bat" "$TARGET_DIR/" 2>/dev/null || true
-    
+
     echo "DLLs copied directly from Qt installation (no intermediate dll folder used)"
 elif [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH" ]; then
     echo "Copying DLLs directly from CMAKE_PREFIX_PATH: $CMAKE_PREFIX_PATH"
     TARGET_DIR="."
-    
+
     cp -f "$CMAKE_PREFIX_PATH/bin/Qt6Core.dll" "$TARGET_DIR/" 2>/dev/null"
     cp -f "$CMAKE_PREFIX_PATH/bin/Qt6Gui.dll" "$TARGET_DIR/" 2>/dev/null"
     cp -f "$CMAKE_PREFIX_PATH/bin/Qt6Widgets.dll" "$TARGET_DIR/" 2>/dev/null"
     cp -f "$CMAKE_PREFIX_PATH/bin/Qt6Svg.dll" "$TARGET_DIR/" 2>/dev/null"
-    
+
     cp -f "$CMAKE_PREFIX_PATH/bin/qscintilla2_qt6.dll" "$TARGET_DIR/" 2>/dev/null"
-    
+
     # Copy platform plugin directly from CMAKE_PREFIX_PATH
     mkdir -p "$TARGET_DIR/platforms"
     cp -f "$CMAKE_PREFIX_PATH/plugins/platforms/qwindows.dll" "$TARGET_DIR/platforms/" 2>/dev/null"
-    
+
     # Copy project files
     cp -f "../install_context_menu.reg" "$TARGET_DIR/" 2>/dev/null || true
     cp -f "../install.bat" "$TARGET_DIR/" 2>/dev/null || true
     cp -f "../uninstall.bat" "$TARGET_DIR/" 2>/dev/null || true
-    
+
 else
     echo "Neither QT_DIR nor CMAKE_PREFIX_PATH set, skipping DLL copy."
     echo "Set QT_DIR or CMAKE_PREFIX_PATH environment variable if you need Qt DLLs copied for local testing."

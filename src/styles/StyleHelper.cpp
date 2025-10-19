@@ -109,3 +109,103 @@ QString StyleHelper::getDockWidgetStyle(const QColor &bgColor) const
 {
     return QString("QDockWidget { background-color: %1; border: none; }").arg(bgColor.name());
 }
+
+QString StyleHelper::getMenuBarStyle(const QColor &bgColor, const QColor &fgColor, const QColor &borderColor,
+                                     const QColor &selectionBg, const QColor &selectionFg, int itemHeight,
+                                     const QMargins &padding, const QFont &font) const
+{
+    return QString(R"(
+        QMenuBar {
+            background-color: %1;
+            color: %2;
+            border-bottom: 1px solid %3;
+            font-family: "%7";
+            font-size: %8pt;
+        }
+        QMenuBar::item {
+            background-color: transparent;
+            padding: %4px %5px %6px %9px;
+            min-height: %10px;
+            border: none;
+        }
+        QMenuBar::item:selected {
+            background-color: %11;
+            color: %12;
+        }
+        QMenuBar::item:pressed {
+            background-color: %11;
+            color: %12;
+        }
+        QMenu {
+            background-color: %1;
+            color: %2;
+            border: 1px solid %3;
+            font-family: "%7";
+            font-size: %8pt;
+        }
+        QMenu::item {
+            padding: %4px %5px %6px %9px;
+            min-height: %10px;
+        }
+        QMenu::item:selected {
+            background-color: %11;
+            color: %12;
+        }
+    )")
+        .arg(bgColor.name())
+        .arg(fgColor.name())
+        .arg(borderColor.name())
+        .arg(padding.top())
+        .arg(padding.right())
+        .arg(padding.bottom())
+        .arg(font.family())
+        .arg(font.pointSize())
+        .arg(padding.left())
+        .arg(itemHeight)
+        .arg(selectionBg.name())
+        .arg(selectionFg.name());
+}
+
+QString StyleHelper::getEditorTabBarStyle(const QColor &tabBG, const QColor &tabFG, const QColor &tabActiveBG,
+                                          const QColor &tabHoverBG) const
+{
+    
+    return QString(R"(
+        QTabBar {
+            background: %3;
+            border: none;
+            qproperty-drawBase: false;
+            qproperty-expanding: false;
+            outline: none;
+        }
+
+        QTabBar::tab {
+            background: %1;
+            color: %2;
+            margin: 0;
+            padding: 0 12px;
+            min-width: 80px;
+            min-height: 28px;
+        }
+
+        QTabBar::tab:!selected { background: %1; }
+        QTabBar::tab:disabled { background: %1; }
+
+        QTabBar::tab:not(:last) { margin-right: 2px; }
+        QTabBar::tab:first { margin-left: 2px; }
+
+        QTabBar::tab:hover {
+            background: %4;
+        }
+        QTabBar::tab:selected {
+            background: %3 !important;
+            color: %2;
+            border-bottom: 2px solid %2;
+            padding-bottom: 4px;
+        }
+    )")
+        .arg(tabBG.name())
+        .arg(tabFG.name())
+        .arg(tabActiveBG.name())
+        .arg(tabHoverBG.name());
+}

@@ -1,5 +1,8 @@
 #include "MainWindow.h"
 #include "menubar/FileMenu.h"
+#include "components/EditorTabBar.h"
+#include "components/CustomTabWidget.h"
+#include "../styles/StyleHelper.h"
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QTabBar>
@@ -39,21 +42,17 @@ void MainWindow::setupEditor()
 {
     CodeEditor *editor = new CodeEditor(this);
 
-    editorTab = new QTabWidget(this);
+    editorTab = new CustomTabWidget(this);
     editorTab->setTabsClosable(true);
     editorTab->setMovable(true);
-    editorTab->tabBar()->setExpanding(true);
+    
+    EditorTabBar *editorTabBar = new EditorTabBar(this);
+    static_cast<CustomTabWidget*>(editorTab)->setCustomTabBar(editorTabBar);
+    editorTabBar->setExpanding(true);
+    editorTabBar->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(editorTabBar, &QTabBar::customContextMenuRequested, this, &MainWindow::onTabContextMenuRequested);
+    
     setCentralWidget(editorTab);
-
-    if (editorTab->tabBar())
-    {
-        QTabBar *tb = editorTab->tabBar();
-        tb->setElideMode(Qt::ElideRight);
-        tb->setExpanding(true);
-        tb->setUsesScrollButtons(true);
-        tb->setContextMenuPolicy(Qt::CustomContextMenu);
-        connect(tb, &QTabBar::customContextMenuRequested, this, &MainWindow::onTabContextMenuRequested);
-    }
 
     connect(editorTab, &QTabWidget::tabCloseRequested, this, &MainWindow::onTabCloseRequested);
     connect(editorTab, &QTabWidget::currentChanged, this, &MainWindow::onCurrentTabChanged);
@@ -100,6 +99,12 @@ void MainWindow::applyTheme()
 
     if (editorTab)
     {
+        // Apply theme to editor tab bar
+        if (EditorTabBar *customTabBar = qobject_cast<EditorTabBar*>(editorTab->tabBar()))
+        {
+            customTabBar->applyTheme();
+        }
+        
         for (int i = 0; i < editorTab->count(); ++i)
         {
             CodeEditor *ed = qobject_cast<CodeEditor *>(editorTab->widget(i));
@@ -132,56 +137,10 @@ void MainWindow::applyTheme()
             menuFont = QFont("Segoe UI", 9);
         }
 
-        QString menuStyleSheet = QString(R"(
-            QMenuBar {
-                background-color: %1;
-                color: %2;
-                border-bottom: 1px solid %3;
-                font-family: "%7";
-                font-size: %8pt;
-            }
-            QMenuBar::item {
-                background-color: transparent;
-                padding: %4px %5px %6px %9px;
-                min-height: %10px;
-                border: none;
-            }
-            QMenuBar::item:selected {
-                background-color: %11;
-                color: %12;
-            }
-            QMenuBar::item:pressed {
-                background-color: %11;
-                color: %12;
-            }
-            QMenu {
-                background-color: %1;
-                color: %2;
-                border: 1px solid %3;
-                font-family: "%7";
-                font-size: %8pt;
-            }
-            QMenu::item {
-                padding: %4px %5px %6px %9px;
-                min-height: %10px;
-            }
-            QMenu::item:selected {
-                background-color: %11;
-                color: %12;
-            }
-        )")
-                                     .arg(menuBg.name())
-                                     .arg(menuFg.name())
-                                     .arg(menuBorder.name())
-                                     .arg(menuPadding.top())
-                                     .arg(menuPadding.right())
-                                     .arg(menuPadding.bottom())
-                                     .arg(menuFont.family())
-                                     .arg(menuFont.pointSize())
-                                     .arg(menuPadding.left())
-                                     .arg(menuItemHeight)
-                                     .arg(menuSelectionBg.name())
-                                     .arg(menuSelectionFg.name());
+        QString menuStyleSheet = StyleHelper::instance().getMenuBarStyle(
+            menuBg, menuFg, menuBorder, menuSelectionBg, menuSelectionFg, 
+            menuItemHeight, menuPadding, menuFont
+        );
 
         menuBar()->setStyleSheet(menuStyleSheet);
 
@@ -291,7 +250,20 @@ void MainWindow::openFile(const QString &filePath)
     file.close();
 
     CodeEditor *editor = new CodeEditor(this);
+    
+    VOLT_DEBUG("Connecting text changed signal");
+    
+    //? Connect text changed signal BEFORE setting text
+    connect(editor, &CodeEditor::fileModificationChanged,
+            this, &MainWindow::onFileModificationChanged);
+    
+    //! Block signals during initial file load to prevent false modification detection
+    editor->setLoadingFile(true);
     editor->setText(content);
+    editor->setLoadingFile(false);
+    
+    // * Mark this content as the "saved" baseline for comparison
+    editor->markAsSaved();
 
     StyleManager::setupWidgetScrollbars(editor);
     editor->refreshTheme();
@@ -315,8 +287,9 @@ void MainWindow::openFile(const QString &filePath)
     editorTab->setCurrentIndex(idx);
 
     setWindowTitle(QString(" - %1").arg(fileInfo.fileName()));
-    VoltLogger::instance().info("Opened file: %1", filePath);
 }
+
+
 
 void MainWindow::openFolder(const QString &folderPath)
 {
@@ -437,4 +410,76 @@ void MainWindow::onCurrentTabChanged(int index)
     {
         setWindowTitle("Volt Editor");
     }
+}
+
+/*
+ * Slot called when a file in editor is modified or saved
+ * Updates the tab title to show asterisk (*) for unsaved changes
+ */
+void MainWindow::onFileModificationChanged(bool hasChanges)
+{
+    //* Find which tab contains the sender (Signal sender is CodeEditor)
+    CodeEditor *senderEditor = qobject_cast<CodeEditor*>(sender());
+    if (!senderEditor || !editorTab)
+        return;
+    
+    // Search for the tab containing this editor
+    for (int i = 0; i < editorTab->count(); ++i)
+    {
+        QWidget *container = editorTab->widget(i);
+        if (!container)
+            continue;
+            
+        CodeEditor *editor = container->findChild<CodeEditor*>();
+        if (editor == senderEditor)
+        {
+            updateTabModified(i, hasChanges);
+            
+            int modifiedCount = getModifiedFileCount();
+            break;
+        }
+    }
+}
+
+/*
+ * Updates tab title to show asterisk for unsaved files
+ * Format: "filename.txt" -> "filename.txt *" (when modified)
+ */
+void MainWindow::updateTabModified(int tabIndex, bool hasUnsavedChanges)
+{
+    if (tabIndex < 0 || tabIndex >= editorTab->count())
+        return;
+    
+    if (EditorTabBar *customtabBar = qobject_cast<EditorTabBar*>(editorTab->tabBar()))
+    {
+        customtabBar->setTabModified(tabIndex, hasUnsavedChanges);
+    }
+    
+}
+
+/*
+ * Counts how many files have unsaved changes
+ * This number will be shown in sidebar explorer icon
+ */
+int MainWindow::getModifiedFileCount() const
+{
+    int count = 0;
+    
+    if (!editorTab)
+        return 0;
+    
+    for (int i = 0; i < editorTab->count(); ++i)
+    {
+        QWidget *container = editorTab->widget(i);
+        if (!container)
+            continue;
+            
+        CodeEditor *editor = container->findChild<CodeEditor*>();
+        if (editor && editor->hasUnsavedChanges())
+        {
+            count++;
+        }
+    }
+    VOLT_DEBUG_F("[MAINWINDOW] getModifiedFileCount: %1", QString::number(count));
+    return count;
 }

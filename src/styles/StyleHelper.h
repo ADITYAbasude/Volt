@@ -4,6 +4,7 @@
 #include <QColor>
 #include <QFont>
 #include <QString>
+#include <QMargins>
 
 class Theme;
 
@@ -12,26 +13,29 @@ class StyleHelper : public QObject
     Q_OBJECT
 
 public:
-    static StyleHelper& instance();
+    static StyleHelper &instance();
 
-    // Tree view styling
-    QString getTreeViewStyle(const QColor &bgColor, const QColor &fgColor, 
-                           const QColor &selectionBg, const QColor &selectionFg,
-                           const QColor &hoverBg, const QColor &primaryColor,
-                           const QFont &font) const;
+    QString getTreeViewStyle(const QColor &bgColor, const QColor &fgColor,
+                             const QColor &selectionBg, const QColor &selectionFg,
+                             const QColor &hoverBg, const QColor &primaryColor,
+                             const QFont &font) const;
 
-    // Tab widget styling  
     QString getTabWidgetStyle(const QColor &bgColor, const QColor &fgColor) const;
 
-    // Label styling
     QString getLabelStyle(const QColor &fgColor) const;
 
-    // Dock widget styling
     QString getDockWidgetStyle(const QColor &bgColor) const;
+
+    QString getMenuBarStyle(const QColor &bgColor, const QColor &fgColor, const QColor &borderColor,
+                            const QColor &selectionBg, const QColor &selectionFg, int itemHeight,
+                            const QMargins &padding, const QFont &font) const;
+
+    QString getEditorTabBarStyle(const QColor &tabBG, const QColor &tabFG, const QColor &tabActiveBG,
+                                 const QColor &tabHoverBG) const;
 
 private:
     StyleHelper(QObject *parent = nullptr);
     ~StyleHelper() = default;
-    StyleHelper(const StyleHelper&) = delete;
-    StyleHelper& operator=(const StyleHelper&) = delete;
+    StyleHelper(const StyleHelper &) = delete;
+    StyleHelper &operator=(const StyleHelper &) = delete;
 };

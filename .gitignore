@@ -58,3 +58,4 @@ build/
 volt-package/
 *.zip
 package.sh
+.clangd

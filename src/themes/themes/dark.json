@@ -13,7 +13,7 @@
     "editor.selectionForeground": "#ffffff",
     "editor.currentLine": "#2a2d2e",
     "editor.matchingBrace": "#ffd700",
-    "editor.tab.background": "#202222",
+    "editor.tab.background": "#383735",
 
     "statusBar.background": "#ffca2c",
     "statusBar.foreground": "#000",
@@ -45,7 +45,9 @@
     "scrollbar.handle": "#464647",
     "scrollbar.handleHover": "#5a5a5c",
     "scrollbar.handlePressed": "#6c6c6e",
-    "scrollbar.corner": "#1e1e1e"
+    "scrollbar.corner": "#1e1e1e",
+
+    "editor.modifiedIndicator": "#ffca2d"
   },
   "fonts": {
     "editor": {

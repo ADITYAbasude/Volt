@@ -1,5 +1,5 @@
 
-#include "FileMenu.h"
+#include "FileMenu.h" 
 #include <QApplication>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -145,6 +145,10 @@ void FileMenu::saveFile()
     QTextStream out(&file);
     out << fileContent;
     file.close();
+    
+    //* Mark the editor as saved
+    editor->markAsSaved();
+    VOLT_INFO_F("File saved successfully: %1", currentPath);
 }
 
 /*
@@ -155,7 +159,6 @@ void FileMenu::saveFile()
 
 void FileMenu::saveAsFile()
 {
-
     if (!mainWindow)
     {
         VOLT_INFO("Main window pointer is null in FileMenu::saveAsFile");
@@ -222,10 +225,10 @@ void FileMenu::saveAsFile()
     QFileInfo fileInfo(fileName);
     tabWidget->tabBar()->setTabText(currentIndex, fileInfo.fileName());
     tabWidget->tabBar()->setTabData(currentIndex, fileName);
-    // if (tabWidget->tabBar())
-    // {
-    //     tabWidget->tabBar()->setTabData(currentIndex, fileName);
-    // }
+    
+    // Mark the editor as saved (removes asterisk from tab title)
+    editor->markAsSaved();
+    VOLT_INFO_F("File saved as: %1", fileName);
 }
 
 void FileMenu::exitApplication()

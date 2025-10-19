@@ -18,6 +18,7 @@ set(SOURCES
     logging/VoltLogger.cpp
     ui/components/CustomTabBar.cpp
     ui/components/CustomTabWidget.cpp
+    ui/components/EditorTabBar.cpp
     )
     
 set(HEADERS
@@ -38,6 +39,7 @@ set(HEADERS
     logging/VoltLogger.h
     ui/components/CustomTabBar.h
     ui/components/CustomTabWidget.h
+    ui/components/EditorTabBar.h
 )
 
 qt_add_resources(RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources/app.qrc)

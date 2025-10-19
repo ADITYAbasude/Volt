@@ -83,20 +83,19 @@ void StatusBar::applyTheme()
             background-color: %10;
         }
     )")
-    .arg(bgColor.name())                    // %1 - background
-    .arg(fgColor.name())                    // %2 - foreground
-    .arg(borderColor.name())                // %3 - border
-    .arg(statusFont.family())               // %4 - font family
-    .arg(statusFont.pointSize())            // %5 - font size
-    .arg(padding.top())                     // %6 - padding top
-    .arg(padding.right())                   // %7 - padding right
-    .arg(padding.bottom())                  // %8 - padding bottom
-    .arg(padding.left())                    // %9 - padding left
-    .arg(bgColor.lighter(120).name());      // %10 - hover color
+    .arg(bgColor.name())                    
+    .arg(fgColor.name())                    
+    .arg(borderColor.name())                
+    .arg(statusFont.family())               
+    .arg(statusFont.pointSize())            
+    .arg(padding.top())                     
+    .arg(padding.right())                   
+    .arg(padding.bottom())                  
+    .arg(padding.left())                    
+    .arg(bgColor.lighter(120).name());      
     
     setStyleSheet(stylesheet);
     
-    VoltLogger::instance().ui(" ===== VOLT STATUS BAR THEME SET SUCCESSFULLY =====");
 }
 
 

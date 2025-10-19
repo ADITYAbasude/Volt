@@ -3,16 +3,20 @@
 #include "../logging/VoltLogger.h"
 
 CodeEditor::CodeEditor(QWidget *parent)
-    : QsciScintilla(parent), lexer(nullptr)
+    : QsciScintilla(parent), lexer(nullptr), isFileHasUnsavedChanges(false), isLoadingFile(false)
 {
     Theme::instance().loadTheme("dark");
 
     setupEditor();
     applyTheme();
 
-    //* For updating margin colors on cursor move *// 
+    //* For updating margin colors on cursor move *//
     connect(this, &QsciScintilla::cursorPositionChanged,
             this, &CodeEditor::updateMarginColors);
+
+    //* Connect to SCN_MODIFIED notification - fires on EVERY text change *//
+    connect(this, SIGNAL(SCN_MODIFIED(int, int, const char*, int, int, int, int, int, int, int)),
+            this, SLOT(onLinesChanged()));
 }
 
 void CodeEditor::setupEditor()
@@ -57,7 +61,6 @@ void CodeEditor::applyTheme()
         editorFont = QFont("Consolas", 10);
     }
 
-    // Clear and set default styles
     SendScintilla(SCI_CLEARDOCUMENTSTYLE);
     SendScintilla(SCI_STYLESETBACK, STYLE_DEFAULT, bg.rgb());
     SendScintilla(SCI_STYLESETFORE, STYLE_DEFAULT, fg.rgb());
@@ -65,7 +68,6 @@ void CodeEditor::applyTheme()
     SendScintilla(SCI_STYLESETSIZE, STYLE_DEFAULT, editorFont.pointSize());
     SendScintilla(SCI_STYLECLEARALL);
 
-    // Apply base colors and font
     setPaper(bg);
     setColor(fg);
     setFont(editorFont);
@@ -270,4 +272,57 @@ void CodeEditor::updateMarginColors()
 void CodeEditor::refreshTheme()
 {
     applyTheme();
+}
+
+void CodeEditor::markAsSaved()
+{
+    isFileHasUnsavedChanges = false;
+    lastSavedContent = text();
+    emit fileModificationChanged(false);
+}
+
+/*
+ * Detects ANY text change (every keystroke, paste, delete, etc.)
+ * Emits signal to MainWindow to update tab title with asterisk (*)
+ */
+/*
+ * Slot for linesChanged signal
+ * This fires whenever lines are added, deleted, or modified in the document
+ * This is the most reliable way to detect text changes in QScintilla
+ */
+void CodeEditor::onLinesChanged()
+{
+    
+    if (isLoadingFile)
+    {
+        VOLT_DEBUG("[EDITOR] Ignoring text change - file is being loaded");
+        return;
+    }
+
+    /* 
+        * Compare current content with saved content.
+        * If they match, clear the unsaved changes flag.
+        * If they differ, set the unsaved changes flag.
+        ! NOTE: If performance becomes an issue, consider optimizing this by tracking changes incrementally. 
+    */
+    QString currentContent = text();
+    bool contentMatches = (currentContent == lastSavedContent);
+    
+    if (contentMatches)
+    {
+        if (isFileHasUnsavedChanges)
+        {
+            isFileHasUnsavedChanges = false;
+            emit fileModificationChanged(false);
+            VOLT_INFO("[EDITOR] ✓ Content restored to saved state - removing asterisk");
+        }
+    }
+    else
+    {
+        if (!isFileHasUnsavedChanges)
+        {
+            isFileHasUnsavedChanges = true;
+            emit fileModificationChanged(true);
+        }
+    }
 }
